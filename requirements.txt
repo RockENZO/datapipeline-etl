@@ -1,4 +1,0 @@
-pandas
-pymongo
-flask
-gunicorn
