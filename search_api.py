@@ -26,15 +26,24 @@ def search():
     if not address:
         return jsonify({"error": "Address parameter is required"}), 400
 
+    # Split the address into components
+    address_parts = address.split()
+    if len(address_parts) < 3:
+        return jsonify({"error": "Address format should be 'number street_name street_type'"}), 400
+
+    number_first = address_parts[0]
+    street_name = address_parts[1]
+    street_type = address_parts[2]
+
     conn = get_db_connection()
     cur = conn.cursor()
     query = """
     SELECT latitude, longitude
-    FROM gnaf_202411.addresses
-    WHERE address LIKE %s
+    FROM gnaf_202411.address_principals
+    WHERE number_first = %s AND street_name = %s AND street_type = %s
     LIMIT 1;
     """
-    cur.execute(query, (f"%{address}%",))
+    cur.execute(query, (number_first, street_name, street_type))
     result = cur.fetchone()
     cur.close()
     conn.close()
