@@ -6,3 +6,5 @@
 `psql -h localhost -p 5433 -U postgres -d postgres`
 ### Changing search path
 `SET search_path TO gnaf_202411, public;`
+### Example usage
+`curl "http://localhost:5001/search?address=95%20Balo%20Street"`

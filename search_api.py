@@ -32,14 +32,15 @@ def search():
         return jsonify({"error": "Address format should be 'number street_name street_type'"}), 400
 
     number_first = address_parts[0]
-    street_name = address_parts[1]
-    street_type = address_parts[2]
+    street_name = address_parts[1].upper()  # Convert to uppercase to match the database
+    street_type = address_parts[2].upper()  # Convert to uppercase to match the database
 
     conn = get_db_connection()
     cur = conn.cursor()
     query = """
+    SET search_path TO gnaf_202411, public;
     SELECT latitude, longitude
-    FROM gnaf_202411.address_principals
+    FROM address_principals
     WHERE number_first = %s AND street_name = %s AND street_type = %s
     LIMIT 1;
     """
