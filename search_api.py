@@ -23,34 +23,37 @@ def get_db_connection():
 @app.route('/search', methods=['GET'])
 def search():
     address = request.args.get('address')
+    state = request.args.get('state')
     if not address:
         return jsonify({"error": "Address parameter is required"}), 400
 
     # Split the address into components
     address_parts = address.split()
-    if len(address_parts) < 3:
-        return jsonify({"error": "Address format should be 'number street_name street_type'"}), 400
-
-    number_first = address_parts[0]
-    street_name = address_parts[1].upper()  # Convert to uppercase to match the database
-    street_type = address_parts[2].upper()  # Convert to uppercase to match the database
+    number_first = address_parts[0] if len(address_parts) > 0 else None
+    street_name = address_parts[1].upper() if len(address_parts) > 1 else None
+    street_type = address_parts[2].upper() if len(address_parts) > 2 else None
 
     conn = get_db_connection()
     cur = conn.cursor()
+    
+    # Build the query dynamically based on available parts
     query = """
     SET search_path TO gnaf_202502, public;
-    SELECT latitude, longitude
+    SELECT DISTINCT latitude, longitude
     FROM address_principals
-    WHERE number_first = %s AND street_name = %s AND street_type = %s
-    LIMIT 1;
+    WHERE (%s IS NULL OR number_first = %s)
+    AND (%s IS NULL OR street_name LIKE %s)
+    AND (%s IS NULL OR street_type LIKE %s)
+    AND (%s IS NULL OR state = %s)
+    LIMIT 10;
     """
-    cur.execute(query, (number_first, street_name, street_type))
-    result = cur.fetchone()
+    cur.execute(query, (number_first, number_first, street_name, f"%{street_name}%", street_type, f"%{street_type}%", state, state))
+    results = cur.fetchall()
     cur.close()
     conn.close()
 
-    if result:
-        return jsonify({"latitude": result[0], "longitude": result[1]})
+    if results:
+        return jsonify([{"latitude": result[0], "longitude": result[1]} for result in results])
     else:
         return jsonify({"error": "Address not found"}), 404
 

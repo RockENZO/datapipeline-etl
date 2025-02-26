@@ -6,5 +6,9 @@
 `psql -h localhost -p 5433 -U postgres -d postgres`
 ### Changing search path
 `SET search_path TO gnaf_202502, public;`
-### Example usage
-`curl "http://localhost:5001/search?address=95%20Balo%20Street"`
+
+### Example Usage:
+To search with only the street number: `curl "http://localhost:5001/search?address=95"`
+To search with street number and name: `curl "http://localhost:5001/search?address=95%20Balo"`
+To search with full address: `curl "http://localhost:5001/search?address=95%20Balo%20Street"`
+To search with state: `curl "http://localhost:5001/search?address=95%20Balo%20Street&state=NSW"`
