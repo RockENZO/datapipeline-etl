@@ -38,7 +38,7 @@ def search():
     conn = get_db_connection()
     cur = conn.cursor()
     query = """
-    SET search_path TO gnaf_202411, public;
+    SET search_path TO gnaf_202502, public;
     SELECT latitude, longitude
     FROM address_principals
     WHERE number_first = %s AND street_name = %s AND street_type = %s
