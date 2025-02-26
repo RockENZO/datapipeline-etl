@@ -39,13 +39,12 @@ def search():
     # Build the query dynamically based on available parts
     query = """
     SET search_path TO gnaf_202502, public;
-    SELECT DISTINCT latitude, longitude
+    SELECT DISTINCT latitude, longitude, number_first, street_name, street_type, state
     FROM address_principals
     WHERE (%s IS NULL OR number_first = %s)
     AND (%s IS NULL OR street_name LIKE %s)
     AND (%s IS NULL OR street_type LIKE %s)
-    AND (%s IS NULL OR state = %s)
-    LIMIT 10;
+    AND (%s IS NULL OR state = %s);
     """
     cur.execute(query, (number_first, number_first, street_name, f"%{street_name}%", street_type, f"%{street_type}%", state, state))
     results = cur.fetchall()
@@ -53,7 +52,14 @@ def search():
     conn.close()
 
     if results:
-        return jsonify([{"latitude": result[0], "longitude": result[1]} for result in results])
+        return jsonify([{
+            "latitude": result[0],
+            "longitude": result[1],
+            "number_first": result[2],
+            "street_name": result[3],
+            "street_type": result[4],
+            "state": result[5]
+        } for result in results])
     else:
         return jsonify({"error": "Address not found"}), 404
 
