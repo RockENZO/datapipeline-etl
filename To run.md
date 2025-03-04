@@ -6,6 +6,10 @@
 `psql -h localhost -p 5433 -U postgres -d postgres`
 ### Changing search path
 `SET search_path TO gnaf_202502, public;`
+### start Redis server
+`brew services start redis`
+### Run Celery Worker
+`celery -A search_api.celery worker --loglevel=info`
 
 ### Example Usage:
 To search with only the street number: `curl "http://localhost:5001/search?address=95"`

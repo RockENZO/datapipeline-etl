@@ -1,7 +1,16 @@
 from flask import Flask, request, jsonify
 import psycopg2
+from celery_config import make_celery
 
 app = Flask(__name__)
+
+# Celery configuration
+app.config.update(
+    CELERY_BROKER_URL='redis://localhost:6379/0',
+    CELERY_RESULT_BACKEND='redis://localhost:6379/0'
+)
+
+celery = make_celery(app)
 
 # Database connection parameters
 DB_HOST = "localhost"
@@ -20,13 +29,8 @@ def get_db_connection():
     )
     return conn
 
-@app.route('/search', methods=['GET'])
-def search():
-    address = request.args.get('address')
-    state = request.args.get('state')
-    if not address:
-        return jsonify({"error": "Address parameter is required"}), 400
-
+@celery.task
+def search_task(address, state):
     # Split the address into components
     address_parts = address.split()
     number_first = address_parts[0] if len(address_parts) > 0 else None
@@ -51,17 +55,44 @@ def search():
     cur.close()
     conn.close()
 
-    if results:
-        return jsonify([{
-            "latitude": result[0],
-            "longitude": result[1],
-            "number_first": result[2],
-            "street_name": result[3],
-            "street_type": result[4],
-            "state": result[5]
-        } for result in results])
+    return [{
+        "latitude": result[0],
+        "longitude": result[1],
+        "number_first": result[2],
+        "street_name": result[3],
+        "street_type": result[4],
+        "state": result[5]
+    } for result in results]
+
+@app.route('/search', methods=['GET'])
+def search():
+    address = request.args.get('address')
+    state = request.args.get('state')
+    if not address:
+        return jsonify({"error": "Address parameter is required"}), 400
+
+    task = search_task.apply_async(args=[address, state])
+    return jsonify({"task_id": task.id}), 202
+
+@app.route('/results/<task_id>', methods=['GET'])
+def get_results(task_id):
+    task = search_task.AsyncResult(task_id)
+    if task.state == 'PENDING':
+        response = {
+            'state': task.state,
+            'status': 'Pending...'
+        }
+    elif task.state != 'FAILURE':
+        response = {
+            'state': task.state,
+            'result': task.result
+        }
     else:
-        return jsonify({"error": "Address not found"}), 404
+        response = {
+            'state': task.state,
+            'status': str(task.info)  # this is the exception raised
+        }
+    return jsonify(response)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)
