@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import psycopg2
-from celery_config import make_celery
+from celery import Celery
 
 app = Flask(__name__)
 
@@ -9,6 +9,16 @@ app.config.update(
     CELERY_BROKER_URL='redis://localhost:6379/0',
     CELERY_RESULT_BACKEND='redis://localhost:6379/0'
 )
+
+def make_celery(app):
+    celery = Celery(
+        app.import_name,
+        backend=app.config['CELERY_RESULT_BACKEND'],
+        broker=app.config['CELERY_BROKER_URL']
+    )
+    celery.conf.update(app.config)
+    celery.autodiscover_tasks(['search_api'])
+    return celery
 
 celery = make_celery(app)
 
@@ -29,7 +39,7 @@ def get_db_connection():
     )
     return conn
 
-@celery.task
+@celery.task(name='search_api.search_task')
 def search_task(address, state):
     # Split the address into components
     address_parts = address.split()
@@ -72,7 +82,8 @@ def search():
         return jsonify({"error": "Address parameter is required"}), 400
 
     task = search_task.apply_async(args=[address, state])
-    return jsonify({"task_id": task.id}), 202
+    result = task.get(timeout=30)  # Wait for the task to complete with a timeout
+    return jsonify(result), 200
 
 @app.route('/results/<task_id>', methods=['GET'])
 def get_results(task_id):
