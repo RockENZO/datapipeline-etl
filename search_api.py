@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import psycopg2
 from celery import Celery
+import logging
 
 app = Flask(__name__)
 
@@ -47,6 +48,9 @@ def search_task(address, state):
     street_name = address_parts[1].upper() if len(address_parts) > 1 else None
     street_type = address_parts[2].upper() if len(address_parts) > 2 else None
 
+    logging.info(f"Searching for address: {address}, state: {state}")
+    logging.info(f"Parsed address parts - number_first: {number_first}, street_name: {street_name}, street_type: {street_type}")
+
     conn = get_db_connection()
     cur = conn.cursor()
     
@@ -56,14 +60,16 @@ def search_task(address, state):
     SELECT DISTINCT latitude, longitude, number_first, street_name, street_type, state
     FROM address_principals
     WHERE (%s IS NULL OR number_first = %s)
-    AND (%s IS NULL OR street_name LIKE %s)
-    AND (%s IS NULL OR street_type LIKE %s)
+    AND (%s IS NULL OR street_name ILIKE %s)
+    AND (%s IS NULL OR street_type ILIKE %s)
     AND (%s IS NULL OR state = %s);
     """
     cur.execute(query, (number_first, number_first, street_name, f"%{street_name}%", street_type, f"%{street_type}%", state, state))
     results = cur.fetchall()
     cur.close()
     conn.close()
+    
+    logging.info(f"Query results: {results}")
 
     return [{
         "latitude": result[0],
