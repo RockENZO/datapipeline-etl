@@ -1,5 +1,11 @@
 ### Process
-1. In your docker environment pull the image using `docker pull minus34/gnafloader:latest`
+- Using docker-compose to start Elasticsearch, Postgres, and Redis:
+`docker-compose up -d`
+- To stop and clean up all containers:
+`docker-compose down`
+
+### Gnaf loader
+1. Pull the image using `docker pull minus34/gnafloader:latest`
 2. Run using `docker run --publish=5433:5432 minus34/gnafloader:latest`
 3. Access Postgres in the container via port `5433`. Default login is - user: `postgres`, password: `password`
 ### To check the search path
@@ -8,6 +14,8 @@
 `SET search_path TO gnaf_202502, public;`
 ### Start Redis server
 `brew services start redis`
+### Check if Redis is running
+`redis-cli ping`
 ### Run Celery Worker
 `celery -A search_api.celery worker --loglevel=info`
 ### Stop Redis server

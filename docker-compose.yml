@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.4
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+    restart: always
+
+  postgres:
+    image: minus34/gnafloader:latest
+    container_name: postgres
+    ports:
+      - "5433:5432"  # Map container's port 5432 to host's port 5433
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    restart: always
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"  # Default Redis port
+    restart: always
