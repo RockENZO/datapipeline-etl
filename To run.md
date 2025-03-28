@@ -35,6 +35,8 @@ To search with state: `curl "http://localhost:5001/search?address=95%20Balo%20St
 `curl -X DELETE "http://localhost:9200/building_complex_points"`
 ### Verify the data indexed
 `curl -X GET "http://localhost:9200/building_complex_points/_search?pretty"`
+### List all indices in Elasticsearch
+`curl -X GET "http://localhost:9200/_cat/indices?v"`
 ### Stop elasticsearch docker container
 `docker stop elasticsearch`
 ### Remove stopped es container
