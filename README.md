@@ -1,10 +1,10 @@
-### Process
+## Process
 - Using docker-compose to start Elasticsearch, Postgres, and Redis:
 `docker-compose up -d`
 - To stop and clean up all containers:
 `docker-compose down`
 
-### Gnaf loader
+## Gnaf loader
 1. Pull the image using `docker pull minus34/gnafloader:latest`
 2. Run using `docker run --publish=5433:5432 minus34/gnafloader:latest`
 3. Access Postgres in the container via port `5433`. Default login is - user: `postgres`, password: `password`
@@ -27,6 +27,7 @@ To search with street number and name: `curl "http://localhost:5001/search?addre
 To search with full address: `curl "http://localhost:5001/search?address=95%20Balo%20Street"`
 To search with state: `curl "http://localhost:5001/search?address=95%20Balo%20Street&state=NSW"`
 
+## Elastic Search Engine
 ### Pull elasticsearch docker image
 `docker pull docker.elastic.co/elasticsearch/elasticsearch:7.17.4`
 ### Run elasticsearch in docker
