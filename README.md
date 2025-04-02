@@ -36,6 +36,7 @@ To search with state: `curl "http://localhost:5001/search?address=95%20Balo%20St
 `curl -X DELETE "http://localhost:9200/building_complex_points"`
 ### Verify the data indexed
 `curl -X GET "http://localhost:9200/building_complex_points/_search?pretty"`
+`curl -X GET "http://localhost:9200/pedestrian_counts/_search?pretty"`
 ### List all indices in Elasticsearch
 `curl -X GET "http://localhost:9200/_cat/indices?v"`
 ### Stop elasticsearch docker container
@@ -45,5 +46,5 @@ To search with state: `curl "http://localhost:5001/search?address=95%20Balo%20St
 
 ### ES data query usage:
 To search in Elasticsearch;
-`curl "http://localhost:5003/es_search?query=GREENWICH%20HOSPITAL"`
-
+`curl "http://localhost:5003/es_search/building_complex_points?query=GREENWICH%20HOSPITAL"`
+`curl "http://localhost:5003/es_search/pedestrian_counts?query=Park%20Street"`

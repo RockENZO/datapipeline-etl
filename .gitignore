@@ -1,2 +1,8 @@
-# Ignore the GNAF dataset folder
+# Ignore the dataset folder and data files
 g-naf_nov24_allstates_gda2020_psv_1017/
+
+BuildingComplexPoint_EPSG4326.json
+
+Height of Building_EPSG4326.json
+
+NSW Ambulance Station_EPSG4326.json
