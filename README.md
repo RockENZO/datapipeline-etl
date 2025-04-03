@@ -1,8 +1,50 @@
-## Process
-- Using docker-compose to start Elasticsearch, Postgres, and Redis:
-`docker-compose up -d`
-- To stop and clean up all containers:
-`docker-compose down`
+## Project Overview
+
+This project is designed to manage and process data related to pedestrian counts and address searches using various technologies including Flask, Elasticsearch, PostgreSQL, and Celery. The project is structured to facilitate easy deployment and scaling using Docker containers.
+
+### Project Structure
+
+- **api_data_index.py**: Contains functions to fetch, transform, and index API data into Elasticsearch. Utilizes the `apscheduler` library for periodic updates.
+  
+- **GNAF_search_api.py**: Sets up a Flask application that provides an API for searching addresses. It uses Celery for asynchronous task processing and connects to a PostgreSQL database.
+
+- **es_search_api.py**: Establishes a Flask application with endpoints for searching data in Elasticsearch indices, specifically for building complex points and pedestrian counts.
+
+- **es_index.py**: Initializes an Elasticsearch index for building complex points, defines the index mapping, and bulk indexes data from a JSON file.
+
+- **celery_config.py**: Contains a function to create and configure a Celery instance for task management.
+
+- **docker-compose.yml**: Defines the services for the application, including Elasticsearch, PostgreSQL, and Redis, along with their configurations.
+
+### Setup Instructions
+
+1. **Clone the Repository**: 
+   Clone this repository to your local machine.
+
+2. **Install Docker**: 
+   Ensure that Docker and Docker Compose are installed on your machine.
+
+3. **Build Docker Images**: 
+   Navigate to the project directory and build the Docker images using the following command:
+   ```
+   docker-compose build
+   ```
+
+4. **Start Services**: 
+   Start all services defined in the `docker-compose.yml` file:
+   ```
+   docker-compose up -d
+   ```
+
+5. **Access Services**: 
+   - The GNAF search API will be available at `http://localhost:5001/search`.
+   - The Elasticsearch search API will be available at `http://localhost:5003/es_search`.
+
+6. **Stop and Clean Up**: 
+   To stop and remove all containers, run:
+   ```
+   docker-compose down
+   ```
 
 ## Gnaf loader
 1. Pull the image using `docker pull minus34/gnafloader:latest`
@@ -21,11 +63,11 @@
 ### Stop Redis server
 `brew services stop redis`
 
-### Example Usage(GNAF):
+<!-- ### Example Usage(GNAF):
 To search with only the street number: `curl "http://localhost:5001/search?address=95"`
 To search with street number and name: `curl "http://localhost:5001/search?address=95%20Balo"`
 To search with full address: `curl "http://localhost:5001/search?address=95%20Balo%20Street"`
-To search with state: `curl "http://localhost:5001/search?address=95%20Balo%20Street&state=NSW"`
+To search with state: `curl "http://localhost:5001/search?address=95%20Balo%20Street&state=NSW"` -->
 
 ## Elastic Search Engine
 ### Pull elasticsearch docker image
@@ -44,7 +86,42 @@ To search with state: `curl "http://localhost:5001/search?address=95%20Balo%20St
 ### Remove stopped es container
 `docker rm elasticsearch`
 
-### ES data query usage:
+<!-- ### ES data query usage:
 To search in Elasticsearch;
 `curl "http://localhost:5003/es_search/building_complex_points?query=GREENWICH%20HOSPITAL"`
-`curl "http://localhost:5003/es_search/pedestrian_counts?query=Park%20Street"`
+`curl "http://localhost:5003/es_search/pedestrian_counts?query=Park%20Street"` -->
+
+
+### Usage Examples
+
+- **GNAF Search API**:
+  - To search with only the street number: 
+    ```
+    curl "http://localhost:5001/search?address=95"
+    ```
+  - To search with street number and name: 
+    ```
+    curl "http://localhost:5001/search?address=95%20Balo"
+    ```
+  - To search with full address: 
+    ```
+    curl "http://localhost:5001/search?address=95%20Balo%20Street"
+    ```
+  - To search with state: 
+    ```
+    curl "http://localhost:5001/search?address=95%20Balo%20Street&state=NSW"
+    ```
+
+- **Elasticsearch Queries**:
+  - To search in Elasticsearch for building complex points:
+    ```
+    curl "http://localhost:5003/es_search/building_complex_points?query=GREENWICH%20HOSPITAL"
+    ```
+  - To search for pedestrian counts:
+    ```
+    curl "http://localhost:5003/es_search/pedestrian_counts?query=Park%20Street"
+    ```
+
+### Conclusion
+
+This project provides a robust framework for managing pedestrian count data and address searches using modern technologies. By leveraging Docker, the application can be easily deployed and scaled, ensuring efficient data processing and retrieval.
