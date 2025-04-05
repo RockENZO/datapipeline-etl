@@ -121,6 +121,10 @@ To search in Elasticsearch;
     ```
     curl "http://localhost:5003/es_search/pedestrian_counts?query=Park%20Street"
     ```
+  - To search for height of building:
+    ```
+    curl "http://localhost:5003/es_search/height_of_building?query=Liverpool"
+    ```
 
 ### Conclusion
 
