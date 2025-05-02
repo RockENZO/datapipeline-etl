@@ -175,6 +175,31 @@ def search_ambulance_stations():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/es_search/bicycle_network', methods=['GET'])
+def search_bicycle_network():
+    """Search in the bicycle_network index."""
+    query = request.args.get('query')
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    # Define the search query
+    search_body = {
+        "query": {
+            "multi_match": {
+                "query": query,
+                "fields": ["properties.name", "properties.region", "properties.lga", "properties.facility"]
+            }
+        }
+    }
+
+    try:
+        # Perform the search
+        response = es.search(index="bicycle_network", body=search_body)
+        return jsonify(response['hits']['hits']), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=True)

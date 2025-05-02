@@ -142,6 +142,10 @@ To search in Elasticsearch;
   ```
   curl "http://localhost:5003/es_search/ambulance_stations?query=CALVARY"
   ```
+  - To search for bicycle network data:
+  ```
+  curl "http://localhost:5003/es_search/bicycle_network?query=Carrington"
+  ```
 
 
 

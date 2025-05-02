@@ -374,4 +374,75 @@ except helpers.BulkIndexError as e:
     for error in e.errors:
         logger.error(error)
 
+# Define the index mapping for bicycle_network
+bicycle_network_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_shape"  # Use geo_shape for line or polygon data
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "fid": { "type": "integer" },
+                    "roadclass": { "type": "text" },
+                    "region": { "type": "text" },
+                    "lga": { "type": "text" },
+                    "name": { "type": "text" },
+                    "facility": { "type": "text" },
+                    "infra": { "type": "text" },
+                    "oneway": { "type": "text" },
+                    "width": { "type": "float" },
+                    "length_km": { "type": "float" },
+                    "edit_dt": { "type": "date", "format": "yyyyMMdd" },
+                    "SHAPE__Length": { "type": "float" },
+                    "portal_last_updated": { "type": "date", "format": "yyyy-MM-dd" },
+                    "globalid": { "type": "keyword" }
+                }
+            }
+        }
+    }
+}
+
+# Create the index for bicycle_network
+es.indices.create(index='bicycle_network', body=bicycle_network_mapping, ignore=400)
+
+# Load data from Existing_Bicycle_Network_SPHERICAL_MERCATOR.json
+with open('./Existing_Bicycle_Network_SPHERICAL_MERCATOR.json') as f:
+    bicycle_network_data = json.load(f)
+
+# Check if the 'Existing_Bicycle_Network' key exists
+if "Existing_Bicycle_Network" not in bicycle_network_data:
+    logger.error("The 'Existing_Bicycle_Network' key is missing in the bicycle network JSON file.")
+    exit(1)
+
+# Check if the 'features' key exists under 'Existing_Bicycle_Network'
+if "features" not in bicycle_network_data["Existing_Bicycle_Network"]:
+    logger.error("The 'features' key is missing under 'Existing_Bicycle_Network' in the JSON file.")
+    exit(1)
+
+# Prepare the data for bulk indexing
+bicycle_network_actions = [
+    {
+        "_index": "bicycle_network",
+        "_id": feature["properties"]["fid"],  # Use fid as the document ID
+        "_source": {
+            "geometry": feature["geometry"],  # GeoJSON geometry
+            "properties": feature["properties"]
+        }
+    }
+    for feature in bicycle_network_data["Existing_Bicycle_Network"]["features"]
+]
+
+# Bulk index the data for bicycle_network
+try:
+    helpers.bulk(es, bicycle_network_actions)
+    logger.info("Bicycle Network data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
+
+
+
 
