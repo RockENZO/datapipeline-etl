@@ -203,3 +203,64 @@ except helpers.BulkIndexError as e:
     logger.error(f"Bulk indexing error: {e.errors}")
     for error in e.errors:
         logger.error(error)
+
+
+# Define the index mapping for recreation_centres
+recreation_centres_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_point"  # Use geo_point for point data
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "OBJECTID": { "type": "integer" },
+                    "Name": { "type": "text" },
+                    "Address": { "type": "text" },
+                    "Address2": { "type": "text" },
+                    "Suburb": { "type": "text" },
+                    "Postcode": { "type": "integer" },
+                    "PhoneNumber": { "type": "text" },
+                    "URL": { "type": "text" },
+                    "OpeningHours": { "type": "text" },
+                    "Lat": { "type": "float" },
+                    "Long": { "type": "float" }
+                }
+            }
+        }
+    }
+}
+
+# Create the index for recreation_centres
+es.indices.create(index='recreation_centres', body=recreation_centres_mapping, ignore=400)
+
+# Load data from Recreation_centres.geojson
+with open('./Recreation_centres.geojson') as f:
+    recreation_centres_data = json.load(f)
+
+# Prepare the data for bulk indexing
+recreation_centres_actions = [
+    {
+        "_index": "recreation_centres",
+        "_id": feature["properties"]["OBJECTID"],  # Use OBJECTID as the document ID
+        "_source": {
+            "geometry": {
+                "lat": feature["geometry"]["coordinates"][1],
+                "lon": feature["geometry"]["coordinates"][0]
+            },
+            "properties": feature["properties"]
+        }
+    }
+    for feature in recreation_centres_data["features"]
+]
+
+# Bulk index the data for recreation_centres
+try:
+    helpers.bulk(es, recreation_centres_actions)
+    logger.info("Recreation Centres data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
+

@@ -130,6 +130,10 @@ To search in Elasticsearch;
     ```
     curl "http://localhost:5003/es_search/stairs?query=Billyard"
     ```
+  - To search for recreation centres:
+    ```
+    curl "http://localhost:5003/es_search/recreation_centres?query=Redfern"
+    ```
 
 ### Conclusion
 
