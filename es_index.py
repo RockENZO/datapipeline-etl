@@ -317,4 +317,61 @@ except helpers.BulkIndexError as e:
     for error in e.errors:
         logger.error(error)
 
+# Define the index mapping for ambulance_stations
+ambulance_stations_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_point"  # Use geo_point for point data
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "OBJECTID": { "type": "integer" },
+                    "topoid": { "type": "integer" },
+                    "generalname": { "type": "text" },
+                    "classsubtype": { "type": "integer" },
+                    "operationalstatus": { "type": "integer" },
+                    "urbanity": { "type": "text" },
+                    "planimetricaccuracy": { "type": "integer" },
+                    "createdate": { "type": "date", "format": "yyyyMMddHHmmss" },
+                    "lastupdate": { "type": "date", "format": "yyyyMMddHHmmss" }
+                }
+            }
+        }
+    }
+}
+
+# Create the index for ambulance_stations
+es.indices.create(index='ambulance_stations', body=ambulance_stations_mapping, ignore=400)
+
+# Load data from NSW Ambulance Station_EPSG4326.json
+with open('./NSW Ambulance Station_EPSG4326.json') as f:
+    ambulance_stations_data = json.load(f)
+
+# Prepare the data for bulk indexing
+ambulance_stations_actions = [
+    {
+        "_index": "ambulance_stations",
+        "_id": feature["properties"]["OBJECTID"],  # Use OBJECTID as the document ID
+        "_source": {
+            "geometry": {
+                "lat": feature["geometry"]["coordinates"][1],
+                "lon": feature["geometry"]["coordinates"][0]
+            },
+            "properties": feature["properties"]
+        }
+    }
+    for feature in ambulance_stations_data["Hospital"]["features"]
+]
+
+# Bulk index the data for ambulance_stations
+try:
+    helpers.bulk(es, ambulance_stations_actions)
+    logger.info("Ambulance Stations data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
+
 

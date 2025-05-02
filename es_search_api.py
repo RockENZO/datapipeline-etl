@@ -151,7 +151,29 @@ def search_information_kiosks():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/es_search/ambulance_stations', methods=['GET'])
+def search_ambulance_stations():
+    """Search in the ambulance_stations index."""
+    query = request.args.get('query')
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
 
+    # Define the search query
+    search_body = {
+        "query": {
+            "multi_match": {
+                "query": query,
+                "fields": ["properties.generalname", "properties.urbanity"]
+            }
+        }
+    }
+
+    try:
+        # Perform the search
+        response = es.search(index="ambulance_stations", body=search_body)
+        return jsonify(response['hits']['hits']), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':

@@ -138,6 +138,10 @@ To search in Elasticsearch;
   ```
   curl "http://localhost:5003/es_search/information_kiosks?query=Customs"
   ```
+  - To search for ambulance station:
+  ```
+  curl "http://localhost:5003/es_search/ambulance_stations?query=CALVARY"
+  ```
 
 
 
