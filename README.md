@@ -79,6 +79,7 @@ To search with state: `curl "http://localhost:5001/search?address=95%20Balo%20St
 ### Verify the data indexed
 `curl -X GET "http://localhost:9200/building_complex_points/_search?pretty"`
 `curl -X GET "http://localhost:9200/pedestrian_counts/_search?pretty"`
+`curl -X GET "http://localhost:9200/stairs/_search?pretty"`
 ### List all indices in Elasticsearch
 `curl -X GET "http://localhost:9200/_cat/indices?v"`
 ### Stop elasticsearch docker container
@@ -124,6 +125,10 @@ To search in Elasticsearch;
   - To search for height of building:
     ```
     curl "http://localhost:5003/es_search/height_of_building?query=Liverpool"
+    ```
+  - To search for stairs data:
+    ```
+    curl "http://localhost:5003/es_search/stairs?query=Billyard"
     ```
 
 ### Conclusion

@@ -59,7 +59,7 @@ with open('./BuildingComplexPoint_EPSG4326.json') as f:
     data = json.load(f)
 
 # Prepare the data for bulk indexing
-actions = [
+bcp_actions = [
     {
         "_index": "building_complex_points",
         "_id": feature["properties"]["topoid"],  # Use topoid as the document ID
@@ -76,7 +76,7 @@ actions = [
 
 # Bulk index the data for building_complex_points
 try:
-    helpers.bulk(es, actions)
+    helpers.bulk(es, bcp_actions)
     logger.info("Building Complex Points data indexed successfully")
 except helpers.BulkIndexError as e:
     logger.error(f"Bulk indexing error: {e.errors}")
@@ -124,7 +124,7 @@ with open('./Height of Building_EPSG4326.json') as f:
     hob_data = json.load(f)
 
 # Prepare the data for bulk indexing
-hob_actions = [
+hob_bcp_actions = [
     {
         "_index": "height_of_building",
         "_id": feature["properties"]["OBJECTID"],  # Use OBJECTID as the document ID
@@ -138,8 +138,67 @@ hob_actions = [
 
 # Bulk index the data for height_of_building
 try:
-    helpers.bulk(es, hob_actions)
+    helpers.bulk(es, hob_bcp_actions)
     logger.info("Height of Building data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
+
+# Define the index mapping for stairs
+stairs_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_point"  # Use geo_point for point data
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "OBJECTID": { "type": "integer" },
+                    "ID": { "type": "keyword" },
+                    "Name": { "type": "text" },
+                    "Address": { "type": "text" },
+                    "Suburb": { "type": "text" },
+                    "No_Steps": { "type": "integer" },
+                    "HandRails": { "type": "keyword" },
+                    "TGSI": { "type": "keyword" },
+                    "StairNosingConstrastStrip": { "type": "keyword" },
+                    "ClosestAlternateRoutes": { "type": "text" },
+                    "Photo": { "type": "keyword" }
+                }
+            }
+        }
+    }
+}
+
+# Create the index for stairs
+es.indices.create(index='stairs', body=stairs_mapping, ignore=400)
+
+# Load data from Stairs.geojson
+with open('./Stairs.geojson') as f:
+    stairs_data = json.load(f)
+
+# Prepare the data for bulk indexing
+stairs_actions = [
+    {
+        "_index": "stairs",
+        "_id": feature["properties"]["OBJECTID"],  # Use OBJECTID as the document ID
+        "_source": {
+            "geometry": {
+                "lat": feature["geometry"]["coordinates"][1],
+                "lon": feature["geometry"]["coordinates"][0]
+            },
+            "properties": feature["properties"]
+        }
+    }
+    for feature in stairs_data["features"]
+]
+
+# Bulk index the data for stairs
+try:
+    helpers.bulk(es, stairs_actions)
+    logger.info("Stairs data indexed successfully")
 except helpers.BulkIndexError as e:
     logger.error(f"Bulk indexing error: {e.errors}")
     for error in e.errors:

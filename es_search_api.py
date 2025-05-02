@@ -79,5 +79,30 @@ def search_height_of_building():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/es_search/stairs', methods=['GET'])
+def search_stairs():
+    """Search in the stairs index."""
+    query = request.args.get('query')
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    # Define the search query
+    search_body = {
+        "query": {
+            "multi_match": {
+                "query": query,
+                "fields": ["properties.Name", "properties.Address", "properties.Suburb"]
+            }
+        }
+    }
+
+    try:
+        # Perform the search
+        response = es.search(index="stairs", body=search_body)
+        return jsonify(response['hits']['hits']), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=True)
