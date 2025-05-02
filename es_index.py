@@ -496,3 +496,65 @@ except helpers.BulkIndexError as e:
         logger.error(error)
 
 
+# Define the index mapping for residential_waste_recovery
+residential_waste_recovery_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_shape"  # Use geo_shape for spatial data (if geometry is not null)
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "integer" },
+                    "All_": { "type": "text" },
+                    "F2005_06": { "type": "float" },
+                    "F2006_07": { "type": "float" },
+                    "F2007_08": { "type": "float" },
+                    "F2008_09": { "type": "float" },
+                    "F2009_10": { "type": "float" },
+                    "F2010_11": { "type": "float" },
+                    "F2011_12": { "type": "float" },
+                    "F2012_13": { "type": "float" },
+                    "F2013_14": { "type": "float" },
+                    "F2014_15": { "type": "float" },
+                    "F2015_16": { "type": "float" },
+                    "F2016_17": { "type": "float" },
+                    "F2017_18": { "type": "float" },
+                    "F2018_19": { "type": "float" },
+                    "ObjectId": { "type": "integer" }
+                }
+            }
+        }
+    }
+}
+
+# Create the index for residential_waste_recovery
+es.indices.create(index='residential_waste_recovery', body=residential_waste_recovery_mapping, ignore=400)
+
+# Load data from Residential_waste_recovery.geojson
+with open('./Residential_waste_recovery.geojson') as f:
+    residential_waste_recovery_data = json.load(f)
+
+# Prepare the data for bulk indexing
+residential_waste_recovery_actions = [
+    {
+        "_index": "residential_waste_recovery",
+        "_id": feature["id"],  # Use id from the top level of the Feature object
+        "_source": {
+            "geometry": feature["geometry"],  # GeoJSON geometry (can be null)
+            "properties": feature["properties"]
+        }
+    }
+    for feature in residential_waste_recovery_data["features"]
+]
+
+# Bulk index the data for residential_waste_recovery
+try:
+    helpers.bulk(es, residential_waste_recovery_actions)
+    logger.info("Residential Waste Recovery data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
+

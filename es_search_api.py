@@ -223,6 +223,29 @@ def search_free_15_minute_parking():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/es_search/residential_waste_recovery', methods=['GET'])
+def search_residential_waste_recovery():
+    """Search in the residential_waste_recovery index."""
+    query = request.args.get('query')
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    # Define the search query
+    search_body = {
+        "query": {
+            "match": {
+                "properties.All_": query  # Match the query against the All_ field
+            }
+        }
+    }
+
+    try:
+        # Perform the search
+        response = es.search(index="residential_waste_recovery", body=search_body)
+        return jsonify(response['hits']['hits']), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=True)
