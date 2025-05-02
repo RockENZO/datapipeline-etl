@@ -127,6 +127,32 @@ def search_recreation_centres():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/es_search/information_kiosks', methods=['GET'])
+def search_information_kiosks():
+    """Search in the information_kiosks index."""
+    query = request.args.get('query')
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    # Define the search query
+    search_body = {
+        "query": {
+            "multi_match": {
+                "query": query,
+                "fields": ["properties.CentreName", "properties.StreetAddress", "properties.Suburb"]
+            }
+        }
+    }
+
+    try:
+        # Perform the search
+        response = es.search(index="information_kiosks", body=search_body)
+        return jsonify(response['hits']['hits']), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=True)

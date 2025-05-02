@@ -264,3 +264,57 @@ except helpers.BulkIndexError as e:
     for error in e.errors:
         logger.error(error)
 
+# Define the index mapping for information_kiosks
+information_kiosks_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_point"  # Use geo_point for point data
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "OBJECTID": { "type": "integer" },
+                    "CentreName": { "type": "text" },
+                    "StreetAddress": { "type": "text" },
+                    "Suburb": { "type": "text" },
+                    "Phone": { "type": "text" }
+                }
+            }
+        }
+    }
+}
+
+# Create the index for information_kiosks
+es.indices.create(index='information_kiosks', body=information_kiosks_mapping, ignore=400)
+
+# Load data from Information_kiosks.geojson
+with open('./Information_kiosks.geojson') as f:
+    information_kiosks_data = json.load(f)
+
+# Prepare the data for bulk indexing
+information_kiosks_actions = [
+    {
+        "_index": "information_kiosks",
+        "_id": feature["properties"]["OBJECTID"],  # Use OBJECTID as the document ID
+        "_source": {
+            "geometry": {
+                "lat": feature["geometry"]["coordinates"][1],
+                "lon": feature["geometry"]["coordinates"][0]
+            },
+            "properties": feature["properties"]
+        }
+    }
+    for feature in information_kiosks_data["features"]
+]
+
+# Bulk index the data for information_kiosks
+try:
+    helpers.bulk(es, information_kiosks_actions)
+    logger.info("Information Kiosks data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
+
+

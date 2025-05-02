@@ -134,6 +134,12 @@ To search in Elasticsearch;
     ```
     curl "http://localhost:5003/es_search/recreation_centres?query=Redfern"
     ```
+  - To search for information kiosks:
+  ```
+  curl "http://localhost:5003/es_search/information_kiosks?query=Customs"
+  ```
+
+
 
 ### Conclusion
 
