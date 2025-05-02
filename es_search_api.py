@@ -199,6 +199,29 @@ def search_bicycle_network():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/es_search/free_15_minute_parking', methods=['GET'])
+def search_free_15_minute_parking():
+    """Search in the free_15_minute_parking index."""
+    query = request.args.get('query')
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    # Define the search query
+    search_body = {
+        "query": {
+            "multi_match": {
+                "query": query,
+                "fields": ["properties.Street", "properties.Section", "properties.Suburb"]
+            }
+        }
+    }
+
+    try:
+        # Perform the search
+        response = es.search(index="free_15_minute_parking", body=search_body)
+        return jsonify(response['hits']['hits']), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':

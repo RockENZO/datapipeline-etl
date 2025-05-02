@@ -443,6 +443,56 @@ except helpers.BulkIndexError as e:
     for error in e.errors:
         logger.error(error)
 
+# Define the index mapping for free_15_minute_parking
+free_15_minute_parking_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_shape"  # Use geo_shape for polygon data
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "OBJECTID": { "type": "integer" },
+                    "Street": { "type": "text" },
+                    "Section": { "type": "text" },
+                    "Suburb": { "type": "text" },
+                    "ID": { "type": "integer" },
+                    "Shape__Area": { "type": "float" },
+                    "Shape__Length": { "type": "float" }
+                }
+            }
+        }
+    }
+}
 
+# Create the index for free_15_minute_parking
+es.indices.create(index='free_15_minute_parking', body=free_15_minute_parking_mapping, ignore=400)
+
+# Load data from Free_15_minute_parking.geojson
+with open('./Free_15_minute_parking.geojson') as f:
+    free_15_minute_parking_data = json.load(f)
+
+# Prepare the data for bulk indexing
+free_15_minute_parking_actions = [
+    {
+        "_index": "free_15_minute_parking",
+        "_id": feature["properties"]["OBJECTID"],  # Use OBJECTID as the document ID
+        "_source": {
+            "geometry": feature["geometry"],  # GeoJSON geometry
+            "properties": feature["properties"]
+        }
+    }
+    for feature in free_15_minute_parking_data["features"]
+]
+
+# Bulk index the data for free_15_minute_parking
+try:
+    helpers.bulk(es, free_15_minute_parking_actions)
+    logger.info("Free 15-Minute Parking data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
 
 

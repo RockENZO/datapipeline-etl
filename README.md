@@ -146,6 +146,10 @@ To search in Elasticsearch;
   ```
   curl "http://localhost:5003/es_search/bicycle_network?query=Carrington"
   ```
+  - To search for free 15 mins parking:
+  ```
+  curl "http://localhost:5003/es_search/free_15_minute_parking?query=King"
+  ```
 
 
 
