@@ -558,3 +558,55 @@ except helpers.BulkIndexError as e:
     for error in e.errors:
         logger.error(error)
 
+# Define the index mapping for business_rate_category
+business_rate_category_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_shape"  # Use geo_shape for spatial data
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "integer" },
+                    "category": { "type": "text" },
+                    "description": { "type": "text" },
+                    "rate": { "type": "float" }
+                }
+            }
+        }
+    }
+}
+
+# Create the index for business_rate_category
+es.indices.create(index='business_rate_category', body=business_rate_category_mapping, ignore=400)
+
+# Load data from Business_rate_category.geojson
+with open('./Business_rate_category.geojson') as f:
+    business_rate_category_data = json.load(f)
+
+# Prepare the data for bulk indexing
+business_rate_category_actions = [
+    {
+        "_index": "business_rate_category",
+        "_id": feature["properties"]["OBJECTID"],  # Use OBJECTID as the document ID
+        "_source": {
+            "geometry": feature["geometry"],  # GeoJSON geometry
+            "properties": feature["properties"]
+        }
+    }
+    for feature in business_rate_category_data["features"]
+]
+
+# Bulk index the data for business_rate_category
+try:
+    helpers.bulk(es, business_rate_category_actions)
+    logger.info("Business Rate Category data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
+
+
+
+

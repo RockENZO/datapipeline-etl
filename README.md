@@ -154,6 +154,10 @@ To search in Elasticsearch;
   ```
   curl "http://localhost:5003/es_search/residential_waste_recovery?query=All"
   ```
+  - To search for business rate category shape data:
+  ```
+  curl "http://localhost:5003/es_search/business_rate_category?query=Business"
+  ```
 
 
 

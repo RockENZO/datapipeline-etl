@@ -246,6 +246,33 @@ def search_residential_waste_recovery():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/es_search/business_rate_category', methods=['GET'])
+def search_business_rate_category():
+    """Search in the business_rate_category index."""
+    query = request.args.get('query')
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    # Define the search query
+    search_body = {
+        "query": {
+            "multi_match": {
+                "query": query,
+                "fields": ["properties.BUS_VALUE"]  # Match the correct field name
+            }
+        }
+    }
+
+    try:
+        # Perform the search
+        response = es.search(index="business_rate_category", body=search_body)
+        return jsonify(response['hits']['hits']), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=True)
