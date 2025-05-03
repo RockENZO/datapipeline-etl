@@ -270,6 +270,36 @@ def search_business_rate_category():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/es_search/ucl', methods=['GET'])
+def search_ucl():
+    """Search in the UCL index and return geometry data."""
+    query = request.args.get('query')
+
+    # Define the search query
+    if not query:
+        search_body = {
+            "_source": ["geometry"],  # Include only the geometry field
+            "query": {
+                "match_all": {}
+            }
+        }
+    else:
+        search_body = {
+            "_source": ["geometry"],  # Include only the geometry field
+            "query": {
+                "multi_match": {
+                    "query": query,
+                    "fields": ["properties.ucl_name_2021", "properties.state_name_2021"]
+                }
+            }
+        }
+
+    try:
+        # Perform the search
+        response = es.search(index="ucl", body=search_body, size=10000)  # Adjust size as needed
+        return jsonify(response['hits']['hits']), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 

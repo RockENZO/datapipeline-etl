@@ -3,7 +3,7 @@ import logging
 from elasticsearch import Elasticsearch, helpers
 
 # Initialize Elasticsearch client
-es = Elasticsearch(hosts=["http://localhost:9200"])
+es = Elasticsearch(hosts=["http://localhost:9200"], timeout=60)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -606,6 +606,58 @@ except helpers.BulkIndexError as e:
     logger.error(f"Bulk indexing error: {e.errors}")
     for error in e.errors:
         logger.error(error)
+
+# Define the index mapping for UCL (Urban Centres and Localities)
+ucl_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_shape"  # Use geo_shape for spatial data
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "UCL_CODE": { "type": "keyword" },
+                    "UCL_NAME": { "type": "text" },
+                    "STATE_CODE": { "type": "integer" },
+                    "STATE_NAME": { "type": "text" },
+                    "AREA_SQKM": { "type": "float" },
+                    "Shape__Area": { "type": "float" },
+                    "Shape__Length": { "type": "float" }
+                }
+            }
+        }
+    }
+}
+
+# Create the index for UCL
+es.indices.create(index='ucl', body=ucl_mapping, ignore=400)
+
+# Load data from UCL_SPHERICAL_MERCATOR.json
+with open('./UCL_SPHERICAL_MERCATOR.json') as f:
+    ucl_data = json.load(f)
+
+# Prepare the data for bulk indexing without specifying _id
+ucl_actions = [
+    {
+        "_index": "ucl",
+        "_source": {
+            "geometry": feature["geometry"],  # GeoJSON geometry
+            "properties": feature["properties"]
+        }
+    }
+    for feature in ucl_data["UCL"]["features"]
+]
+
+# Bulk index the data for UCL
+try:
+    helpers.bulk(es, ucl_actions)
+    logger.info("UCL data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
+
 
 
 

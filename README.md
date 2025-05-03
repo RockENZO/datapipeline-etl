@@ -158,6 +158,10 @@ To search in Elasticsearch;
   ```
   curl "http://localhost:5003/es_search/business_rate_category?query=Business"
   ```
+  - To search for urban centres and localities:
+  ```
+  curl "http://localhost:5003/es_search/ucl?query=Sydney"
+  ```
 
 
 
