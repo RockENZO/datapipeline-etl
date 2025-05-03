@@ -302,6 +302,36 @@ def search_ucl():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/es_search/ticket_parking_rates', methods=['GET'])
+def search_ticket_parking_rates():
+    """Search in the ticket_parking_rates index."""
+    query = request.args.get('query')
+
+    # Define the search query
+    if not query:
+        search_body = {
+            "query": {
+                "match_all": {}
+            }
+        }
+    else:
+        search_body = {
+            "query": {
+                "multi_match": {
+                    "query": query,
+                    "fields": ["properties.PlanYear", "properties.Tariff1", "properties.Tariff2"]
+                }
+            }
+        }
+
+    try:
+        # Perform the search
+        response = es.search(index="ticket_parking_rates", body=search_body, size=10000)  # Adjust size as needed
+        return jsonify(response['hits']['hits']), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
 
 
 if __name__ == '__main__':

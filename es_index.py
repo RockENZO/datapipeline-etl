@@ -659,6 +659,65 @@ except helpers.BulkIndexError as e:
         logger.error(error)
 
 
+# Define the index mapping for ticket_parking_rates
+ticket_parking_rates_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_shape"  # Use geo_shape for spatial data
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "OBJECTID": { "type": "integer" },
+                    "ID": { "type": "keyword" },
+                    "PlanYear": { "type": "text" },
+                    "Tariff1": { "type": "text" },
+                    "Tariff2": { "type": "text" },
+                    "Shape__Area": { "type": "float" },
+                    "Shape__Length": { "type": "float" }
+                }
+            }
+        }
+    }
+}
+
+# Create the index for ticket_parking_rates
+es.indices.create(index='ticket_parking_rates', body=ticket_parking_rates_mapping, ignore=400)
+
+# Load data from Ticket_parking_rates.geojson
+with open('./Ticket_parking_rates.geojson') as f:
+    ticket_parking_rates_data = json.load(f)
+
+# Prepare the data for bulk indexing
+ticket_parking_rates_actions = []
+
+for feature in ticket_parking_rates_data["features"]:
+    geometry = feature.get("geometry")
+    properties = feature.get("properties")
+
+    # Validate geometry
+    if geometry and geometry.get("type") in ["Polygon", "MultiPolygon"] and "coordinates" in geometry:
+        ticket_parking_rates_actions.append({
+            "_index": "ticket_parking_rates",
+            "_id": properties.get("OBJECTID"),  # Use OBJECTID as the document ID
+            "_source": {
+                "geometry": geometry,  # GeoJSON geometry
+                "properties": properties
+            }
+        })
+    else:
+        logger.warning(f"Invalid geometry for OBJECTID {properties.get('OBJECTID')} - Skipping")
+
+# Bulk index the data for ticket_parking_rates
+try:
+    helpers.bulk(es, ticket_parking_rates_actions)
+    logger.info("Ticket Parking Rates data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
+
 
 
 

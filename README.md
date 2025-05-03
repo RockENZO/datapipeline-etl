@@ -162,6 +162,10 @@ To search in Elasticsearch;
   ```
   curl "http://localhost:5003/es_search/ucl?query=Sydney"
   ```
+  - To search for ticket parking rates data:
+  ```
+  curl "http://localhost:5003/es_search/ticket_parking_rates?query=2022"
+  ```
 
 
 
