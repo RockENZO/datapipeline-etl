@@ -400,6 +400,46 @@ def search_lga_ndd_total():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/es_search/dzn', methods=['GET'])
+def search_dzn():
+    geom_type = request.args.get('type')
+    query = request.args.get('query')
+
+    if geom_type:
+        search_body = {
+            "query": {
+                "match": {
+                    "geometry.type": geom_type
+                }
+            }
+        }
+    elif not query:
+        search_body = { "query": { "match_all": {} } }
+    else:
+        search_body = {
+            "query": {
+                "multi_match": {
+                    "query": query,
+                    "fields": [
+                        "properties.dzn_code",
+                        "properties.sa2_name_2021" 
+                    ]
+                }
+            }
+        }
+
+    try:
+        response = es.search(index="dzn", body=search_body, size=1000)
+        results = []
+        for hit in response['hits']['hits']:
+            geom = hit['_source']['geometry']
+            results.append({
+                "type": geom.get("type"),
+                "coordinates": geom.get("coordinates")
+            })
+        return jsonify(results), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 

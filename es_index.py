@@ -827,4 +827,49 @@ except helpers.BulkIndexError as e:
     for error in e.errors:
         logger.error(error)
 
+dzn_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_shape",
+                "properties": {
+                    "type": { "type": "keyword" }
+                }
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "dzn_code": { "type": "keyword" },
+                    "sa2_name_2021": { "type": "text" }  
+                }
+            }
+        }
+    }
+}
+
+es.indices.create(index='dzn', body=dzn_mapping, ignore=400)
+
+with open('./DZN_SPHERICAL_MERCATOR.json') as f:
+    dzn_data = json.load(f)
+
+dzn_actions = []
+for idx, feature in enumerate(dzn_data["DZN"]["features"]):
+    properties = feature.get("properties", {})
+    object_id = properties.get("dzn_code", idx)
+    dzn_actions.append({
+        "_index": "dzn",
+        "_id": object_id,
+        "_source": {
+            "geometry": feature.get("geometry"),
+            "properties": properties
+        }
+    })
+
+try:
+    helpers.bulk(es, dzn_actions)
+    logger.info("DZN data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
 

@@ -174,7 +174,10 @@ To search in Elasticsearch;
     ```
     curl "http://localhost:5003/es_search/lga_ndd_total?type=Polygon"
     ```
-
+  - To search for Destination Zones data:
+    ```
+    curl "http://localhost:5003/es_search/dzn?query=Bombala"
+    ```
 
 ### Conclusion
 

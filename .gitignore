@@ -28,3 +28,6 @@ Ticket_parking_rates.geojson
 Parking_permits_areas.geojson
 
 LGA_NDD_Total_EPSG4326.json
+
+DZN_SPHERICAL_MERCATOR.json
+
