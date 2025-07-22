@@ -873,3 +873,64 @@ except helpers.BulkIndexError as e:
     for error in e.errors:
         logger.error(error)
 
+# Define the index mapping for library_details
+library_details_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_shape"  # Use geo_shape for spatial data (if geometry is present)
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "FacilityID": { "type": "integer" },
+                    "Name": { "type": "text" },
+                    "Address": { "type": "text" },
+                    "Suburb": { "type": "text" },
+                    "URL": { "type": "text" },
+                    "HoursWeekday": { "type": "text" },
+                    "HoursWeekends": { "type": "text" },
+                    "HoursPublicHols": { "type": "text" },
+                    "Transport": { "type": "text" },
+                    "PrintCopyScan": { "type": "keyword" },
+                    "Computer_SelfService": { "type": "keyword" },
+                    "MobilityParkingOnSite": { "type": "keyword" },
+                    "MobilityParking": { "type": "text" },
+                    "LevelAccessEntrance": { "type": "text" },
+                    "Toilet_Accessible": { "type": "text" },
+                    "Computer_Accessible": { "type": "text" },
+                    "HearingSupportSystem": { "type": "text" },
+                    "WheelchairAccess": { "type": "keyword" },
+                    "Notes": { "type": "text" }
+                }
+            }
+        }
+    }
+}
+
+es.indices.create(index='library_details', body=library_details_mapping, ignore=400)
+
+with open('./Library_details.geojson') as f:
+    library_details_data = json.load(f)
+
+library_details_actions = []
+for feature in library_details_data["features"]:
+    properties = feature.get("properties", {})
+    object_id = properties.get("FacilityID")
+    library_details_actions.append({
+        "_index": "library_details",
+        "_id": object_id,
+        "_source": {
+            "geometry": feature.get("geometry"),  # Will be null for these records
+            "properties": properties
+        }
+    })
+
+try:
+    helpers.bulk(es, library_details_actions)
+    logger.info("Library Details data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
+

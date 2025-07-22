@@ -178,6 +178,10 @@ To search in Elasticsearch;
     ```
     curl "http://localhost:5003/es_search/dzn?query=Bombala"
     ```
+  - To search for Library Accessibility Information:
+    ```
+    curl "http://localhost:5003/es_search/library_details/has_feature?field=Toilet_Accessible"
+    ```
 
 ### Conclusion
 

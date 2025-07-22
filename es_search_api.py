@@ -441,6 +441,26 @@ def search_dzn():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/es_search/library_details/has_feature', methods=['GET'])
+def search_library_details_has_feature():
+    field = request.args.get('field')
+    if not field:
+        return jsonify({"error": "Field parameter is required"}), 400
+
+    search_body = {
+        "query": {
+            "exists": {
+                "field": f"properties.{field}"
+            }
+        }
+    }
+
+    try:
+        response = es.search(index="library_details", body=search_body)
+        return jsonify(response['hits']['hits']), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 
