@@ -772,6 +772,59 @@ except helpers.BulkIndexError as e:
     for error in e.errors:
         logger.error(error)
 
+# Define the index mapping for lga_ndd_total
+lga_ndd_total_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_shape",  # Use geo_shape for polygons
+                "properties": {
+                    "type": { "type": "keyword" }  # Explicitly map geometry.type as keyword
+                }
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "OBJECTID": { "type": "integer" },
+                    "LGA_NAME": { "type": "text" },
+                    "STATE_NAME": { "type": "text" },
+                    "NDD_TOTAL": { "type": "float" },
+                    "Shape__Area": { "type": "float" },
+                    "Shape__Length": { "type": "float" }
+                }
+            }
+        }
+    }
+}
 
+# Create the index for lga_ndd_total
+es.indices.create(index='lga_ndd_total', body=lga_ndd_total_mapping, ignore=400)
+
+# Load data from LGA_NDD_Total_EPSG4326.json
+with open('./LGA_NDD_Total_EPSG4326.json') as f:
+    lga_ndd_total_data = json.load(f)
+
+# Prepare the data for bulk indexing
+lga_ndd_total_actions = []
+for idx, feature in enumerate(lga_ndd_total_data["LGA_NDD_Total"]["features"]):
+    properties = feature.get("properties", {})
+    object_id = properties.get("fid", idx)  # Use 'fid' as unique ID
+    lga_ndd_total_actions.append({
+        "_index": "lga_ndd_total",
+        "_id": object_id,
+        "_source": {
+            "geometry": feature.get("geometry"),
+            "properties": properties
+        }
+    })
+
+# Bulk index the data for lga_ndd_total
+try:
+    helpers.bulk(es, lga_ndd_total_actions)
+    logger.info("LGA NDD Total data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
 
 

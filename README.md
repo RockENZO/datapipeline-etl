@@ -135,41 +135,45 @@ To search in Elasticsearch;
     curl "http://localhost:5003/es_search/recreation_centres?query=Redfern"
     ```
   - To search for information kiosks:
-  ```
-  curl "http://localhost:5003/es_search/information_kiosks?query=Customs"
-  ```
+    ```
+    curl "http://localhost:5003/es_search/information_kiosks?query=Customs"
+    ```
   - To search for ambulance station:
-  ```
-  curl "http://localhost:5003/es_search/ambulance_stations?query=CALVARY"
-  ```
+    ```
+    curl "http://localhost:5003/es_search/ambulance_stations?query=CALVARY"
+    ```
   - To search for bicycle network data:
-  ```
-  curl "http://localhost:5003/es_search/bicycle_network?query=Carrington"
-  ```
+    ```
+    curl "http://localhost:5003/es_search/bicycle_network?query=Carrington"
+    ```
   - To search for free 15 mins parking:
-  ```
-  curl "http://localhost:5003/es_search/free_15_minute_parking?query=King"
-  ```
+    ```
+    curl "http://localhost:5003/es_search/free_15_minute_parking?query=King"
+    ```
   - To search for residential waste recovery data:
-  ```
-  curl "http://localhost:5003/es_search/residential_waste_recovery?query=All"
-  ```
+    ```
+    curl "http://localhost:5003/es_search/residential_waste_recovery?query=All"
+    ```
   - To search for business rate category shape data:
-  ```
-  curl "http://localhost:5003/es_search/business_rate_category?query=Business"
-  ```
+    ```
+    curl "http://localhost:5003/es_search/business_rate_category?query=Business"
+    ```
   - To search for urban centres and localities:
-  ```
-  curl "http://localhost:5003/es_search/ucl?query=Sydney"
-  ```
+    ```
+    curl "http://localhost:5003/es_search/ucl?query=Sydney"
+    ```
   - To search for ticket parking rates data:
-  ```
-  curl "http://localhost:5003/es_search/ticket_parking_rates?query=2022"
-  ```
+    ```
+    curl "http://localhost:5003/es_search/ticket_parking_rates?query=2022"
+    ```
   - To search for parking permits areas data:
-  ```
-  curl "http://localhost:5003/es_search/parking_permits_areas?query=Pyrmont"
-  ```
+    ```
+    curl "http://localhost:5003/es_search/parking_permits_areas?query=Pyrmont"
+    ```
+  - To search for Natural Disaster Declaration data:
+    ```
+    curl "http://localhost:5003/es_search/lga_ndd_total?type=Polygon"
+    ```
 
 
 ### Conclusion

@@ -360,6 +360,47 @@ def search_parking_permits_areas():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/es_search/lga_ndd_total', methods=['GET'])
+def search_lga_ndd_total():
+    geom_type = request.args.get('type')
+    query = request.args.get('query')
+
+    # Build the search query
+    if geom_type:
+        search_body = {
+            "query": {
+                "term": {
+                    "geometry.type.keyword": geom_type  # Filter by geometry type
+                }
+            }
+        }
+    elif not query:
+        search_body = { "query": { "match_all": {} } }
+    else:
+        # Example: search by fid if you want to support property queries
+        search_body = {
+            "query": {
+                "match": {
+                    "properties.fid": query
+                }
+            }
+        }
+
+    try:
+        response = es.search(index="lga_ndd_total", body=search_body, size=1000)
+        # Return only geometry type and coordinates
+        results = []
+        for hit in response['hits']['hits']:
+            geom = hit['_source']['geometry']
+            results.append({
+                "type": geom.get("type"),
+                "coordinates": geom.get("coordinates")
+            })
+        return jsonify(results), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
 
 
