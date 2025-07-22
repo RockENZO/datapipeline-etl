@@ -166,7 +166,10 @@ To search in Elasticsearch;
   ```
   curl "http://localhost:5003/es_search/ticket_parking_rates?query=2022"
   ```
-
+  - To search for parking permits areas data:
+  ```
+  curl "http://localhost:5003/es_search/parking_permits_areas?query=Pyrmont"
+  ```
 
 
 ### Conclusion

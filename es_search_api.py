@@ -331,6 +331,36 @@ def search_ticket_parking_rates():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+@app.route('/es_search/parking_permits_areas', methods=['GET'])
+def search_parking_permits_areas():
+    """Search in the parking_permits_areas index."""
+    query = request.args.get('query')
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    search_body = {
+        "query": {
+            "multi_match": {
+                "query": query,
+                "fields": [
+                    "properties.Label",
+                    "properties.Label_2",
+                    "properties.Precinct",
+                    "properties.BusinessEligible",
+                    "properties.VisitorEligible",
+                    "properties.ResidentialEligible"
+                ]
+            }
+        }
+    }
+
+    try:
+        response = es.search(index="parking_permits_areas", body=search_body)
+        return jsonify(response['hits']['hits']), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
 
 

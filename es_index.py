@@ -718,6 +718,60 @@ except helpers.BulkIndexError as e:
     for error in e.errors:
         logger.error(error)
 
+# Define the index mapping for parking_permits_areas
+parking_permits_areas_mapping = {
+    "mappings": {
+        "properties": {
+            "geometry": {
+                "type": "geo_shape"  # Use geo_shape for polygon data
+            },
+            "properties": {
+                "type": "object",
+                "properties": {
+                    "OBJECTID": { "type": "integer" },
+                    "Precinct": { "type": "keyword" },
+                    "Label": { "type": "text" },
+                    "Label_2": { "type": "text" },
+                    "BusinessEligible": { "type": "keyword" },
+                    "VisitorEligible": { "type": "keyword" },
+                    "ResidentialEligible": { "type": "keyword" },
+                    "Shape__Area": { "type": "float" },
+                    "Shape__Length": { "type": "float" }
+                }
+            }
+        }
+    }
+}
+
+# Create the index for parking_permits_areas
+es.indices.create(index='parking_permits_areas', body=parking_permits_areas_mapping, ignore=400)
+
+# Load data from Parking_permits_areas.geojson
+with open('./Parking_permits_areas.geojson') as f:
+    parking_permits_areas_data = json.load(f)
+
+# Prepare the data for bulk indexing
+parking_permits_areas_actions = [
+    {
+        "_index": "parking_permits_areas",
+        "_id": feature["properties"]["OBJECTID"],
+        "_source": {
+            "geometry": feature["geometry"],
+            "properties": feature["properties"]
+        }
+    }
+    for feature in parking_permits_areas_data["features"]
+]
+
+# Bulk index the data for parking_permits_areas
+try:
+    helpers.bulk(es, parking_permits_areas_actions)
+    logger.info("Parking Permits Areas data indexed successfully")
+except helpers.BulkIndexError as e:
+    logger.error(f"Bulk indexing error: {e.errors}")
+    for error in e.errors:
+        logger.error(error)
+
 
 
 
