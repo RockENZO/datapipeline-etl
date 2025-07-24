@@ -32,7 +32,6 @@ The enhanced map application provides a comprehensive visualization platform for
 
 ### **One-Command Startup**
 ```bash
-cd "/Users/admin/Desktop/Knia map/datapipeline-etl"
 ./start-map.sh
 ```
 
@@ -85,7 +84,7 @@ docker-compose logs data_indexer
 docker-compose restart
 
 # Access map
-open http://localhost:5000
+open http://localhost:5002
 ```
 
 ## Setup Instructions (Legacy/Development)
@@ -109,7 +108,7 @@ open http://localhost:5000
    ```
 
 5. **Access Services**: 
-   - **Interactive Map**: http://localhost:5002 (Main application)
+   - **Interactive Map**: `http://localhost:5002` (Main application)
    - The GNAF search API will be available at `http://localhost:5001/search`.
    - The Elasticsearch search API will be available at `http://localhost:5003/es_search`.
 
@@ -187,7 +186,7 @@ To search in Elasticsearch;
     ```
 
 - **Elasticsearch Queries**:
-  - **Web Map Search**: Access the interactive map at http://localhost:5000 and use the built-in search interface
+  - **Web Map Search**: Access the interactive map at http://localhost:5002 and use the built-in search interface
   - To search in Elasticsearch for building complex points:
     ```
     curl "http://localhost:5003/es_search/building_complex_points?query=GREENWICH%20HOSPITAL"
