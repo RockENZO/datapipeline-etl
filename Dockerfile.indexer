@@ -1,0 +1,19 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install elasticsearch==7.17.9
+
+# Copy indexing script
+COPY es_index_multi_docker.py .
+COPY data/ ./data/
+
+# Wait for Elasticsearch and then index data
+CMD ["python", "es_index_multi_docker.py"]

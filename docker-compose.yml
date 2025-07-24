@@ -8,7 +8,15 @@ services:
       - "9200:9200"
     environment:
       - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   postgres:
     image: minus34/gnafloader:latest
@@ -19,11 +27,93 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   redis:
     image: redis:latest
     container_name: redis
     ports:
       - "6379:6379"  # Default Redis port
+    volumes:
+      - redis_data:/data
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  web_map:
+    build: ./web_map
+    container_name: web_map
+    ports:
+      - "5002:5000"
+    environment:
+      - FLASK_ENV=production
+      - ELASTICSEARCH_HOST=elasticsearch
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  data_indexer:
+    build: 
+      context: .
+      dockerfile: Dockerfile.indexer
+    container_name: data_indexer
+    environment:
+      - ELASTICSEARCH_HOST=elasticsearch
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data:ro
+    restart: "no"  # Run once to index data
+
+  gnaf_api:
+    build:
+      context: .
+      dockerfile: Dockerfile.gnaf
+    container_name: gnaf_api
+    ports:
+      - "5001:5001"
+    environment:
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+
+  es_search_api:
+    build:
+      context: .
+      dockerfile: Dockerfile.es_search
+    container_name: es_search_api
+    ports:
+      - "5003:5003"
+    environment:
+      - ELASTICSEARCH_HOST=elasticsearch
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: always
+
+volumes:
+  elasticsearch_data:
+  postgres_data:
+  redis_data:

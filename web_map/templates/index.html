@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sydney Multi-Dataset Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Custom CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f6fa;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .controls {
+            background: white;
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .dataset-selector {
+            padding: 0.5rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .search-btn, .clear-btn, .toggle-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .search-btn {
+            background: #667eea;
+            color: white;
+        }
+        
+        .search-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+        
+        .clear-btn {
+            background: #f1f2f6;
+            color: #2f3542;
+        }
+        
+        .clear-btn:hover {
+            background: #ddd;
+        }
+        
+        .toggle-btn {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .toggle-btn:hover {
+            background: #219a52;
+        }
+        
+        .toggle-btn.inactive {
+            background: #95a5a6;
+        }
+        
+        .stats {
+            color: #666;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        
+        .map-container {
+            position: relative;
+            height: calc(100vh - 140px);
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 8px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .popup-content {
+            max-width: 300px;
+        }
+        
+        .popup-title {
+            font-weight: bold;
+            color: #2f3542;
+            margin-bottom: 0.5rem;
+            font-size: 16px;
+        }
+        
+        .popup-info {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .popup-info div {
+            margin-bottom: 0.25rem;
+        }
+        
+        .dataset-legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem;
+            border-radius: 8px;
+            z-index: 1000;
+            min-width: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .dataset-legend h4 {
+            margin-bottom: 0.5rem;
+            color: #2f3542;
+            font-size: 14px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .legend-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .legend-item.inactive {
+            opacity: 0.5;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        .legend-polygon {
+            border-radius: 2px;
+        }
+        
+        .legend-count {
+            margin-left: auto;
+            color: #666;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗺️ Sydney Multi-Dataset Interactive Map</h1>
+    </div>
+    
+    <div class="controls">
+        <div class="search-container">
+            <select class="dataset-selector" id="datasetSelector">
+                <option value="">All Datasets</option>
+                {% for key, dataset in datasets.items() %}
+                <option value="{{ key }}">{{ dataset.icon }} {{ dataset.name }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" class="search-input" id="searchInput" placeholder="Search locations, names, addresses...">
+            <button class="search-btn" id="searchBtn">🔍 Search</button>
+            <button class="clear-btn" id="clearBtn">Clear</button>
+        </div>
+        <button class="toggle-btn" id="toggleAllBtn">Show All</button>
+        <div class="stats" id="stats">Ready to search</div>
+    </div>
+    
+    <div class="map-container">
+        <div id="map"></div>
+        <div class="loading" id="loading">
+            <div>🔄 Loading data...</div>
+        </div>
+        
+        <div class="dataset-legend" id="legend">
+            <h4>📊 Dataset Layers</h4>
+            <div id="legendItems"></div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Initialize map centered on Sydney
+        const map = L.map('map').setView([-33.8688, 151.2093], 12);
+        
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Layer groups for different datasets
+        const datasetLayers = {};
+        const datasetCounts = {};
+        
+        // DOM elements
+        const datasetSelector = document.getElementById('datasetSelector');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const toggleAllBtn = document.getElementById('toggleAllBtn');
+        const stats = document.getElementById('stats');
+        const loading = document.getElementById('loading');
+        const legendItems = document.getElementById('legendItems');
+        
+        // Dataset configurations (from server)
+        const datasetConfigs = {{ datasets|tojson }};
+        
+        // Initialize dataset layers
+        Object.keys(datasetConfigs).forEach(datasetKey => {
+            datasetLayers[datasetKey] = L.layerGroup().addTo(map);
+            datasetCounts[datasetKey] = 0;
+        });
+        
+        // Create legend
+        function updateLegend() {
+            legendItems.innerHTML = '';
+            Object.entries(datasetConfigs).forEach(([key, dataset]) => {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                item.dataset.dataset = key;
+                
+                const color = document.createElement('div');
+                color.className = `legend-color ${dataset.geometry_type === 'polygon' ? 'legend-polygon' : ''}`;
+                color.style.backgroundColor = dataset.color;
+                
+                const label = document.createElement('span');
+                label.textContent = `${dataset.icon} ${dataset.name}`;
+                
+                const count = document.createElement('span');
+                count.className = 'legend-count';
+                count.textContent = datasetCounts[key] || 0;
+                
+                item.appendChild(color);
+                item.appendChild(label);
+                item.appendChild(count);
+                
+                item.addEventListener('click', () => {
+                    toggleDatasetLayer(key);
+                });
+                
+                legendItems.appendChild(item);
+            });
+        }
+        
+        // Toggle dataset layer visibility
+        function toggleDatasetLayer(datasetKey) {
+            const layer = datasetLayers[datasetKey];
+            const legendItem = document.querySelector(`[data-dataset="${datasetKey}"]`);
+            
+            if (map.hasLayer(layer)) {
+                map.removeLayer(layer);
+                legendItem.classList.add('inactive');
+            } else {
+                map.addLayer(layer);
+                legendItem.classList.remove('inactive');
+            }
+        }
+        
+        // Create markers based on geometry type
+        function createMarker(feature, dataset) {
+            const props = feature.properties;
+            const geom = feature.geometry;
+            
+            if (dataset.geometry_type === 'point') {
+                const icon = L.divIcon({
+                    html: `<div style="background-color: ${dataset.color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>`,
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8],
+                    className: 'custom-marker'
+                });
+                
+                return L.marker([geom.coordinates[1], geom.coordinates[0]], { icon });
+            } else if (dataset.geometry_type === 'polygon') {
+                const style = {
+                    fillColor: dataset.color,
+                    weight: 2,
+                    opacity: 1,
+                    color: dataset.color,
+                    fillOpacity: 0.3
+                };
+                
+                if (geom.type === 'Polygon') {
+                    return L.polygon(geom.coordinates[0].map(coord => [coord[1], coord[0]]), style);
+                } else if (geom.type === 'MultiPolygon') {
+                    return L.polygon(geom.coordinates.map(poly => 
+                        poly[0].map(coord => [coord[1], coord[0]])
+                    ), style);
+                }
+            }
+            
+            return null;
+        }
+        
+        // Create popup content
+        function createPopupContent(feature, dataset) {
+            const props = feature.properties;
+            const displayName = props._display_name || 'Unnamed';
+            
+            let content = `
+                <div class="popup-content">
+                    <div class="popup-title">${dataset.icon} ${displayName}</div>
+                    <div class="popup-info">
+                        <div><strong>Dataset:</strong> ${dataset.name}</div>
+            `;
+            
+            // Add relevant properties
+            Object.entries(props).forEach(([key, value]) => {
+                if (!key.startsWith('_') && value && key !== dataset.display_field) {
+                    const cleanKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                    content += `<div><strong>${cleanKey}:</strong> ${value}</div>`;
+                }
+            });
+            
+            content += `</div></div>`;
+            return content;
+        }
+        
+        // Search function
+        async function searchData() {
+            const selectedDataset = datasetSelector.value;
+            const query = searchInput.value.trim();
+            
+            loading.style.display = 'block';
+            
+            try {
+                // Clear existing data
+                Object.values(datasetLayers).forEach(layer => layer.clearLayers());
+                Object.keys(datasetCounts).forEach(key => datasetCounts[key] = 0);
+                
+                const datasets = selectedDataset ? [selectedDataset] : Object.keys(datasetConfigs);
+                
+                for (const datasetKey of datasets) {
+                    const bounds = map.getBounds();
+                    const bbox = `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`;
+                    
+                    const url = `/api/search/${datasetKey}?bbox=${bbox}&size=1000${query ? `&query=${encodeURIComponent(query)}` : ''}`;
+                    const response = await fetch(url);
+                    const result = await response.json();
+                    
+                    if (result.success && result.data.features) {
+                        const dataset = result.dataset;
+                        const layer = datasetLayers[datasetKey];
+                        
+                        result.data.features.forEach(feature => {
+                            const marker = createMarker(feature, dataset);
+                            if (marker) {
+                                marker.bindPopup(createPopupContent(feature, dataset));
+                                layer.addLayer(marker);
+                            }
+                        });
+                        
+                        datasetCounts[datasetKey] = result.data.features.length;
+                    }
+                }
+                
+                updateLegend();
+                
+                const totalCount = Object.values(datasetCounts).reduce((sum, count) => sum + count, 0);
+                stats.textContent = `Showing ${totalCount} items${query ? ` for "${query}"` : ''}`;
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                stats.textContent = 'Error loading data';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // Event listeners
+        searchBtn.addEventListener('click', searchData);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchData();
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            datasetSelector.value = '';
+            Object.values(datasetLayers).forEach(layer => layer.clearLayers());
+            Object.keys(datasetCounts).forEach(key => datasetCounts[key] = 0);
+            updateLegend();
+            stats.textContent = 'Ready to search';
+        });
+        
+        toggleAllBtn.addEventListener('click', () => {
+            const allVisible = Object.values(datasetLayers).every(layer => map.hasLayer(layer));
+            
+            if (allVisible) {
+                Object.values(datasetLayers).forEach(layer => map.removeLayer(layer));
+                document.querySelectorAll('.legend-item').forEach(item => item.classList.add('inactive'));
+                toggleAllBtn.textContent = 'Show All';
+                toggleAllBtn.classList.add('inactive');
+            } else {
+                Object.values(datasetLayers).forEach(layer => map.addLayer(layer));
+                document.querySelectorAll('.legend-item').forEach(item => item.classList.remove('inactive'));
+                toggleAllBtn.textContent = 'Hide All';
+                toggleAllBtn.classList.remove('inactive');
+            }
+        });
+        
+        // Load data when map moves
+        map.on('moveend', () => {
+            if (searchInput.value || datasetSelector.value) {
+                searchData();
+            }
+        });
+        
+        // Initialize
+        updateLegend();
+        searchData(); // Load initial data
+    </script>
+</body>
+</html>

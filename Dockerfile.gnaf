@@ -1,0 +1,17 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install flask==2.3.3 psycopg2-binary==2.9.7 celery==5.3.4 redis==5.0.1
+
+COPY GNAF_search_api.py .
+COPY celery_config.py .
+
+EXPOSE 5001
+
+CMD ["python", "GNAF_search_api.py"]

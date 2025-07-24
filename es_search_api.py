@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
 from elasticsearch import Elasticsearch
+import os
 
 # Initialize Flask app
 app = Flask(__name__)
 
 # Elasticsearch client
-es = Elasticsearch(hosts=["http://localhost:9200"])
+es_host = os.getenv('ELASTICSEARCH_HOST', 'localhost')
+es = Elasticsearch(hosts=[f"http://{es_host}:9200"])
 
 @app.route('/es_search/building_complex_points', methods=['GET'])
 def search_building_complex_points():

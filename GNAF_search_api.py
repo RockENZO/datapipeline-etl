@@ -2,13 +2,15 @@ from flask import Flask, request, jsonify
 import psycopg2
 from celery import Celery
 import logging
+import os
 
 app = Flask(__name__)
 
 # Celery configuration
+redis_host = os.getenv('REDIS_HOST', 'localhost')
 app.config.update(
-    CELERY_BROKER_URL='redis://localhost:6379/0',
-    CELERY_RESULT_BACKEND='redis://localhost:6379/0'
+    CELERY_BROKER_URL=f'redis://{redis_host}:6379/0',
+    CELERY_RESULT_BACKEND=f'redis://{redis_host}:6379/0'
 )
 
 def make_celery(app):
@@ -24,8 +26,8 @@ def make_celery(app):
 celery = make_celery(app)
 
 # Database connection parameters
-DB_HOST = "localhost"
-DB_PORT = "5433"  # Use the port mapped to the host
+DB_HOST = os.getenv('POSTGRES_HOST', 'localhost')
+DB_PORT = "5432"  # Use internal port since we're in Docker
 DB_NAME = "postgres"
 DB_USER = "postgres"
 DB_PASSWORD = "password"
