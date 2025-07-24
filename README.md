@@ -1,22 +1,94 @@
 ## Project Overview
 
-This project is designed to manage and process data related to pedestrian counts and address searches using various technologies including Flask, Elasticsearch, PostgreSQL, and Celery. The project is structured to facilitate easy deployment and scaling using Docker containers.
+This project is designed to manage and process spatial data for Sydney, including building complex points, stairs, recreation centres, and other urban infrastructure. The system provides an interactive web map interface and API endpoints for searching across multiple datasets using technologies including Flask, Elasticsearch, PostgreSQL, and Celery. The project is structured to facilitate easy deployment and scaling using Docker containers.
+
+## 🗺️ Sydney Multi-Dataset Interactive Map
+
+The enhanced map application provides a comprehensive visualization platform for Sydney's spatial data, supporting multiple dataset types including points, polygons, and complex geometries.
 
 ### Project Structure
+
+- **es_index_multi_docker.py**: Enhanced multi-dataset indexing script that processes 10+ different spatial datasets with support for both point and polygon geometries.
+
+- **web_map/app.py**: Flask web application serving the interactive map interface with multi-dataset support, search functionality, and dynamic layer controls.
+
+- **web_map/templates/index.html**: Interactive map interface with dataset selector, layer controls, search functionality, and responsive design.
+
+- **start-map.sh**: Automated startup script that handles data verification, service orchestration, health checks, and data indexing.
 
 - **api_data_index.py**: Contains functions to fetch, transform, and index API data into Elasticsearch. Utilizes the `apscheduler` library for periodic updates.
   
 - **GNAF_search_api.py**: Sets up a Flask application that provides an API for searching addresses. It uses Celery for asynchronous task processing and connects to a PostgreSQL database.
 
-- **es_search_api.py**: Establishes a Flask application with endpoints for searching data in Elasticsearch indices, specifically for building complex points and pedestrian counts.
+- **es_search_api.py**: Establishes a Flask application with endpoints for searching data in Elasticsearch indices, supporting multiple dataset types.
 
-- **es_index.py**: Initializes an Elasticsearch index for building complex points, defines the index mapping, and bulk indexes data from a JSON file.
+- **es_index.py**: Legacy single-dataset indexing script for building complex points (superseded by es_index_multi_docker.py).
 
 - **celery_config.py**: Contains a function to create and configure a Celery instance for task management.
 
-- **docker-compose.yml**: Defines the services for the application, including Elasticsearch, PostgreSQL, and Redis, along with their configurations.
+- **docker-compose.yml**: Defines the multi-service architecture including Elasticsearch, PostgreSQL, Redis, web map, data indexer, and API services.
 
-### Setup Instructions
+## 🚀 Quick Start - Interactive Map Application
+
+### **One-Command Startup**
+```bash
+cd "/Users/admin/Desktop/Knia map/datapipeline-etl"
+./start-map.sh
+```
+
+This automated script will:
+1. **Verify Data Files** - Check all 10+ dataset files are present
+2. **Build & Start Services** - Launch Elasticsearch, web map, and supporting services
+3. **Index Datasets** - Process and index 76,000+ spatial data points
+4. **Health Checks** - Ensure all services are ready
+5. **Launch Map** - Interactive map available at http://localhost:5002
+
+### **Shutdown Process**
+```bash
+# Stop all services
+docker-compose down
+
+# Stop services and remove data volumes (complete cleanup)
+docker-compose down -v
+```
+
+### **Available Datasets**
+The map includes the following Sydney datasets:
+- **Building Complex Points** (76,200 records) - Major buildings and complexes
+- **Stairs** (523 records) - Public stairways and steps
+- **Recreation Centres** (6 records) - Community recreation facilities
+- **Information Kiosks** (2 records) - Public information displays
+- **Business Rate Categories** (3 records) - Commercial zone classifications
+- **Free 15-Minute Parking** - Short-term parking zones
+- **Ticket Parking Rates** - Paid parking areas
+- **NSW Ambulance Stations** - Emergency service locations
+- **Height of Building** - Building height data
+- **Library Details** - Public library information
+
+### **Map Features**
+- **Interactive Map Interface** - Pan, zoom, and explore Sydney
+- **Dataset Selector** - Switch between different data types
+- **Search Functionality** - Find specific locations or features
+- **Layer Controls** - Toggle dataset visibility
+- **Responsive Design** - Works on desktop and mobile devices
+
+### **Service Management**
+```bash
+# Check service status
+docker-compose ps
+
+# View logs
+docker-compose logs -f web_map
+docker-compose logs data_indexer
+
+# Restart services
+docker-compose restart
+
+# Access map
+open http://localhost:5000
+```
+
+## Setup Instructions (Legacy/Development)
 
 1. **Clone the Repository**: 
    Clone this repository to your local machine.
@@ -37,6 +109,7 @@ This project is designed to manage and process data related to pedestrian counts
    ```
 
 5. **Access Services**: 
+   - **Interactive Map**: http://localhost:5002 (Main application)
    - The GNAF search API will be available at `http://localhost:5001/search`.
    - The Elasticsearch search API will be available at `http://localhost:5003/es_search`.
 
@@ -114,6 +187,7 @@ To search in Elasticsearch;
     ```
 
 - **Elasticsearch Queries**:
+  - **Web Map Search**: Access the interactive map at http://localhost:5000 and use the built-in search interface
   - To search in Elasticsearch for building complex points:
     ```
     curl "http://localhost:5003/es_search/building_complex_points?query=GREENWICH%20HOSPITAL"
@@ -185,4 +259,4 @@ To search in Elasticsearch;
 
 ### Conclusion
 
-This project provides a robust framework for managing pedestrian count data and address searches using modern technologies. By leveraging Docker, the application can be easily deployed and scaled, ensuring efficient data processing and retrieval.
+This project provides a comprehensive spatial data visualization platform for Sydney, featuring an interactive web map interface and robust API framework for managing multiple datasets. The enhanced multi-dataset architecture supports various geometry types (points, polygons, multipolygons) and provides both visual exploration through the web interface and programmatic access through REST APIs. By leveraging Docker, the application can be easily deployed and scaled, ensuring efficient data processing, indexing, and retrieval across 76,000+ spatial data points.
