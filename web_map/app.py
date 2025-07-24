@@ -94,6 +94,16 @@ DATASETS = {
         'display_field': 'PlanYear',
         'color': '#34495e',
         'icon': '🎫'
+    },
+    'live_buses': {
+        'name': 'Live Buses',
+        'geometry_type': 'point',
+        'search_fields': ['properties.route_id', 'properties.vehicle_label', 'properties.trip_id'],
+        'display_field': 'route_id',
+        'color': '#ff6b35',
+        'icon': '🚌',
+        'live_data': True,
+        'update_interval': 30  # seconds
     }
 }
 

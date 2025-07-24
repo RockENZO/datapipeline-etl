@@ -113,6 +113,18 @@ services:
         condition: service_healthy
     restart: always
 
+  live_bus_indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile.live_bus
+    container_name: live_bus_indexer
+    environment:
+      - ELASTICSEARCH_HOST=elasticsearch
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: always
+
 volumes:
   elasticsearch_data:
   postgres_data:

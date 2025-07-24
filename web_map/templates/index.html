@@ -166,6 +166,25 @@
             margin-bottom: 0.25rem;
         }
         
+        .bus-marker {
+            filter: drop-shadow(1px 1px 3px rgba(0,0,0,0.4));
+            z-index: 1000;
+            background: none !important;
+            border: none !important;
+        }
+        
+        .bus-marker:hover {
+            transform: scale(1.1);
+            transition: transform 0.2s ease;
+        }
+        
+        /* Override any default Leaflet marker styles for bus markers */
+        .bus-marker .leaflet-marker-icon {
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
         .dataset-legend {
             position: absolute;
             top: 10px;
@@ -397,6 +416,118 @@
             return content;
         }
         
+        // Live data management
+        let liveDataIntervals = {};
+        
+        // Start live data updates for datasets marked as live
+        function startLiveDataUpdates() {
+            Object.keys(datasetConfigs).forEach(datasetKey => {
+                const dataset = datasetConfigs[datasetKey];
+                if (dataset.live_data && dataset.update_interval) {
+                    // Initial load
+                    loadLiveData(datasetKey);
+                    
+                    // Set up interval for updates
+                    liveDataIntervals[datasetKey] = setInterval(() => {
+                        loadLiveData(datasetKey);
+                    }, dataset.update_interval * 1000);
+                }
+            });
+        }
+        
+        // Load live data for a specific dataset
+        async function loadLiveData(datasetKey) {
+            try {
+                const bounds = map.getBounds();
+                const bbox = `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`;
+                
+                const url = `/api/search/${datasetKey}?bbox=${bbox}&size=1000`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success && result.data.features) {
+                    const dataset = result.dataset;
+                    const layer = datasetLayers[datasetKey];
+                    
+                    // Clear existing live data for this dataset
+                    layer.clearLayers();
+                    
+                    result.data.features.forEach(feature => {
+                        const marker = createLiveMarker(feature, dataset);
+                        if (marker) {
+                            marker.bindPopup(createLivePopupContent(feature, dataset));
+                            layer.addLayer(marker);
+                        }
+                    });
+                    
+                    datasetCounts[datasetKey] = result.data.features.length;
+                    updateLegend();
+                }
+            } catch (error) {
+                console.error(`Error loading live data for ${datasetKey}:`, error);
+            }
+        }
+        
+        // Create specialized markers for live data (like buses)
+        function createLiveMarker(feature, dataset) {
+            const props = feature.properties;
+            const geom = feature.geometry;
+            
+            if (dataset.name === 'Live Buses') {
+                // Bus emoji marker without background circle
+                const icon = L.divIcon({
+                    html: `<div style="
+                        font-size: 24px;
+                        text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+                        transform: rotate(${props.bearing || 0}deg);
+                        transition: transform 0.3s ease;
+                        background: none;
+                        border: none;
+                        outline: none;
+                        box-shadow: none;
+                    ">${dataset.icon}</div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12],
+                    className: 'bus-marker',
+                    bgPos: [0, 0]
+                });
+                
+                // Bus data uses {lat: x, lon: y} format
+                return L.marker([geom.lat, geom.lon], { icon });
+            }
+            
+            // Default live marker
+            return createMarker(feature, dataset);
+        }
+        
+        // Create popup content for live data
+        function createLivePopupContent(feature, dataset) {
+            const props = feature.properties;
+            
+            if (dataset.name === 'Live Buses') {
+                return `
+                    <div class="popup-content">
+                        <div class="popup-title">🚌 Bus ${props.route_id || 'Unknown Route'}</div>
+                        <div class="popup-info">
+                            <div><strong>Vehicle:</strong> ${props.vehicle_label || 'N/A'}</div>
+                            <div><strong>Trip ID:</strong> ${props.trip_id || 'N/A'}</div>
+                            <div><strong>Speed:</strong> ${props.speed ? `${props.speed} km/h` : 'N/A'}</div>
+                            <div><strong>Status:</strong> ${props.occupancy_status || 'Unknown'}</div>
+                            <div><strong>Last Update:</strong> ${props.timestamp ? new Date(props.timestamp * 1000).toLocaleTimeString() : 'N/A'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return createPopupContent(feature, dataset);
+        }
+        
+        // Stop live data updates
+        function stopLiveDataUpdates() {
+            Object.values(liveDataIntervals).forEach(interval => clearInterval(interval));
+            liveDataIntervals = {};
+        }
+
         // Search function
         async function searchData() {
             const selectedDataset = datasetSelector.value;
@@ -489,6 +620,10 @@
         // Initialize
         updateLegend();
         searchData(); // Load initial data
+        startLiveDataUpdates(); // Start live data updates for datasets marked as live
+        
+        // Clean up intervals when page unloads
+        window.addEventListener('beforeunload', stopLiveDataUpdates);
     </script>
 </body>
 </html>
