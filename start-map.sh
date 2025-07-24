@@ -127,3 +127,9 @@ echo ""
 echo "🛑 To stop the system, run: docker-compose down"
 echo "🔄 To view logs, run: docker-compose logs -f"
 echo ""
+
+# Prompt to open localhost:5002
+echo "🌐 Ready to view the map? Press Enter to open localhost:5002 in your default browser..."
+read -r
+echo "🚀 Opening http://localhost:5002..."
+open http://localhost:5002

@@ -178,16 +178,17 @@ index_mappings = {
     "free_15_minute_parking": {
         "mappings": {
             "properties": {
-                "geometry": {"type": "geo_point"},
+                "geometry": {"type": "geo_shape"},
                 "properties": {
                     "type": "object",
                     "properties": {
                         "OBJECTID": {"type": "integer"},
-                        "Name": {"type": "text"},
-                        "Address": {"type": "text"},
+                        "Street": {"type": "text"},
+                        "Section": {"type": "text"},
                         "Suburb": {"type": "text"},
-                        "Type": {"type": "keyword"},
-                        "Spaces": {"type": "integer"}
+                        "ID": {"type": "integer"},
+                        "Shape__Area": {"type": "float"},
+                        "Shape__Length": {"type": "float"}
                     }
                 }
             }
@@ -196,16 +197,16 @@ index_mappings = {
     "residential_waste_recovery": {
         "mappings": {
             "properties": {
-                "geometry": {"type": "geo_point"},
+                "geometry": {"type": "geo_shape"},
                 "properties": {
                     "type": "object",
                     "properties": {
                         "OBJECTID": {"type": "integer"},
-                        "Name": {"type": "text"},
-                        "Address": {"type": "text"},
-                        "Suburb": {"type": "text"},
-                        "Type": {"type": "keyword"},
-                        "Status": {"type": "keyword"}
+                        "All_": {"type": "text"},
+                        "F2018_19": {"type": "float"},
+                        "F2017_18": {"type": "float"},
+                        "F2016_17": {"type": "float"},
+                        "F2015_16": {"type": "float"}
                     }
                 }
             }
@@ -214,15 +215,17 @@ index_mappings = {
     "ticket_parking_rates": {
         "mappings": {
             "properties": {
-                "geometry": {"type": "geo_point"},
+                "geometry": {"type": "geo_shape"},
                 "properties": {
                     "type": "object",
                     "properties": {
                         "OBJECTID": {"type": "integer"},
-                        "Name": {"type": "text"},
-                        "Address": {"type": "text"},
-                        "Rate": {"type": "text"},
-                        "Hours": {"type": "text"}
+                        "ID": {"type": "keyword"},
+                        "PlanYear": {"type": "text"},
+                        "Tariff1": {"type": "text"},
+                        "Tariff2": {"type": "text"},
+                        "Shape__Area": {"type": "float"},
+                        "Shape__Length": {"type": "float"}
                     }
                 }
             }
