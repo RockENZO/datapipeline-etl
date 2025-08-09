@@ -6,6 +6,10 @@ This project is designed to manage and process spatial data for Sydney, includin
 
 The enhanced map application provides a comprehensive visualization platform for Sydney's spatial data, supporting multiple dataset types including points, polygons, and complex geometries.
 
+## Demo
+![demo1](./data/demo_image.png)
+![demo2](./data/demo_image2.png)
+
 ### Project Structure
 
 - **es_index_multi_docker.py**: Enhanced multi-dataset indexing script that processes 10+ different spatial datasets with support for both point and polygon geometries.
