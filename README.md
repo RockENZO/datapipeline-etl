@@ -62,3 +62,5 @@ The address integration stack uses a two-row synthetic PostgreSQL fixture and a 
 - `compose.test.yml`: reproducible address integration fixture.
 
 Source data and upstream GNAF loader retain their respective licensing and attribution requirements. Before a hosted deployment, add authentication, TLS, rate limits, secret management, backups, monitoring and capacity tests.
+
+Elasticsearch is pinned to [7.17.29](https://www.elastic.co/blog/elastic-stack-7-17-29-released), retaining the 7.x client/index API while updating the bundled runtime used by the container.
