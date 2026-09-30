@@ -18,14 +18,16 @@ def wait_for_elasticsearch():
             if es.ping():
                 logger.info("Elasticsearch is ready!")
                 return es
-        except Exception as e:
+        except Exception:
+            pass
+        if i < 29:
             logger.info(f"Waiting for Elasticsearch... (attempt {i+1}/30)")
             time.sleep(10)
     
     raise Exception("Elasticsearch is not available after 5 minutes")
 
 # Initialize Elasticsearch client
-es = wait_for_elasticsearch()
+es = None
 
 # Define index mappings for different data types
 index_mappings = {
@@ -146,7 +148,7 @@ index_mappings = {
     "height_of_building": {
         "mappings": {
             "properties": {
-                "geometry": {"type": "geo_point"},
+                "geometry": {"type": "geo_shape"},
                 "properties": {
                     "type": "object",
                     "properties": {
@@ -318,13 +320,14 @@ def index_dataset(index_name, file_path, id_field=None, data_path=None):
         
         if actions:
             # Bulk index
-            helpers.bulk(es, actions, chunk_size=1000)
+            helpers.bulk(es, actions, chunk_size=1000, refresh="wait_for")
             logger.info(f"Successfully indexed {len(actions)} documents to {index_name}")
         else:
-            logger.warning(f"No valid documents found for {index_name}")
+            raise ValueError(f"No valid documents found for {index_name}")
             
     except Exception as e:
         logger.error(f"Error indexing {index_name}: {e}")
+        raise
 
 def index_all_datasets():
     """Index all available datasets."""
@@ -342,6 +345,9 @@ def index_all_datasets():
         ('ticket_parking_rates', '/app/data/Ticket_parking_rates.geojson', 'OBJECTID', None)
     ]
     
+    missing = [path for _, path, _, _ in datasets if not os.path.isfile(path)]
+    if missing:
+        raise FileNotFoundError("Required dataset files missing: " + ", ".join(missing))
     for index_name, file_path, id_field, data_path in datasets:
         if os.path.exists(file_path):
             index_dataset(index_name, file_path, id_field, data_path)
@@ -349,6 +355,7 @@ def index_all_datasets():
             logger.warning(f"File not found: {file_path}")
 
 if __name__ == "__main__":
+    es = wait_for_elasticsearch()
     logger.info("Starting multi-dataset indexing process...")
     index_all_datasets()
     logger.info("Multi-dataset indexing complete!")

@@ -1,135 +1,53 @@
-#!/bin/bash
-
-# Sydney Multi-Dataset Map - Startup Script
-echo "🗺️ Starting Sydney Multi-Dataset Interactive Map System..."
-
-# Check if Docker and Docker Compose are installed
-if ! command -v docker &> /dev/null; then
-    echo "❌ Docker is not installed. Please install Docker first."
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+if docker compose version >/dev/null 2>&1; then
+    compose=(docker compose)
+elif command -v docker-compose >/dev/null 2>&1; then
+    compose=(docker-compose)
+else
+    echo "Install Docker Compose first." >&2
     exit 1
 fi
-
-if ! command -v docker-compose &> /dev/null; then
-    echo "❌ Docker Compose is not installed. Please install Docker Compose first."
-    exit 1
-fi
-
-# Check if data files exist
-echo "📁 Checking data files..."
-data_files=(
-    "BuildingComplexPoint_EPSG4326.json"
-    "Stairs.geojson"
-    "Recreation_centres.geojson"
-    "Library_details.geojson"
-    "Information_kiosks.geojson"
-    "NSW Ambulance Station_EPSG4326.json"
-    "Business_rate_category.geojson"
-    "Free_15_minute_parking.geojson"
-    "Residential_waste_recovery.geojson"
-    "Ticket_parking_rates.geojson"
-)
-
-missing_files=()
-for file in "${data_files[@]}"; do
-    if [ ! -f "./data/$file" ]; then
-        missing_files+=("$file")
-    fi
-done
-
-if [ ${#missing_files[@]} -ne 0 ]; then
-    echo "⚠️  Some data files are missing:"
-    for file in "${missing_files[@]}"; do
-        echo "   - $file"
+wait_url() {
+    local url="$1" deadline=$((SECONDS + ${STARTUP_TIMEOUT:-180}))
+    until curl --fail --silent --max-time 5 "$url" >/dev/null; do
+        if (( SECONDS >= deadline )); then
+            echo "Timed out waiting for $url. Check docker compose logs." >&2
+            return 1
+        fi
+        sleep 3
     done
-    echo "The system will still start, but some datasets won't be available."
+}
+if [[ "${1:-}" == --demo ]]; then
+    python3 make_demo_data.py
 fi
-
-echo "📋 Building and starting services..."
-
-# Build and start all services
-docker-compose up --build -d
-
-echo "⏳ Waiting for services to be ready..."
-
-# Wait for Elasticsearch to be healthy
-echo "🔍 Waiting for Elasticsearch..."
-until curl -s http://localhost:9200/_cluster/health | grep -q '"status":"green"\|"status":"yellow"'; do
-    echo "   Still waiting for Elasticsearch..."
-    sleep 5
-done
-echo "✅ Elasticsearch is ready!"
-
-# Wait for the web map to be healthy
-echo "🗺️  Waiting for Web Map service..."
-until curl -s http://localhost:5002/health | grep -q '"status":"healthy"'; do
-    echo "   Still waiting for Web Map..."
+"${compose[@]}" up --build -d
+wait_url http://localhost:9200/_cluster/health
+wait_url http://localhost:5002/health
+# The one-shot indexer must finish successfully before we announce readiness.
+indexer_id=$("${compose[@]}" ps -a -q data_indexer)
+if [[ -z "$indexer_id" ]]; then
+    echo "Data indexer container was not created." >&2
+    exit 1
+fi
+deadline=$((SECONDS + ${INDEX_TIMEOUT:-300}))
+while [[ "$(docker inspect --format '{{.State.Running}}' "$indexer_id")" == true ]]; do
+    if (( SECONDS >= deadline )); then
+        echo "Indexing timed out. Check docker compose logs data_indexer." >&2
+        exit 1
+    fi
     sleep 3
 done
-echo "✅ Web Map is ready!"
-
-# Check indexing status
-echo "📊 Checking data indexing status..."
-sleep 15  # Give indexer time to start
-
-# Wait for data to be indexed
-echo "⏳ Indexing multiple datasets..."
-datasets=(
-    "building_complex_points"
-    "stairs"
-    "recreation_centres"
-    "library_details"
-    "information_kiosks"
-    "nsw_ambulance_stations"
-    "business_rate_category"
-    "free_15_minute_parking"
-    "residential_waste_recovery"
-    "ticket_parking_rates"
-)
-
-total_indexed=0
-for dataset in "${datasets[@]}"; do
-    for i in {1..30}; do
-        count=$(curl -s "http://localhost:9200/${dataset}/_count" 2>/dev/null | grep -o '"count":[0-9]*' | cut -d':' -f2 2>/dev/null || echo "0")
-        if [ ! -z "$count" ] && [ "$count" -gt 0 ]; then
-            echo "✅ $dataset: $count documents indexed"
-            total_indexed=$((total_indexed + count))
-            break
-        fi
-        if [ $i -eq 30 ]; then
-            echo "⚠️  $dataset: No data found (file may be missing)"
-        fi
-        sleep 2
-    done
-done
-
-echo ""
-echo "🎉 Multi-Dataset Map System is ready!"
-echo ""
-echo "� Total documents indexed: $total_indexed"
-echo ""
-echo "🌐 Access the interactive map at: http://localhost:5002"
-echo "🔍 Search API at: http://localhost:5003"
-echo "🏠 GNAF Address API at: http://localhost:5001"
-echo "📊 Elasticsearch at: http://localhost:9200"
-echo ""
-echo "📋 Available Datasets:"
-echo "   🏢 Building Complex Points"
-echo "   🚶 Stairs & Steps"
-echo "   🏃 Recreation Centres"
-echo "   📚 Libraries"
-echo "   ℹ️  Information Kiosks"
-echo "   🚑 Ambulance Stations"
-echo "   🏪 Business Rate Categories"
-echo "   🅿️  Free 15 Minute Parking"
-echo "   ♻️  Waste Recovery Points"
-echo "   🎫 Ticket Parking"
-echo ""
-echo "🛑 To stop the system, run: docker-compose down"
-echo "🔄 To view logs, run: docker-compose logs -f"
-echo ""
-
-# Prompt to open localhost:5002
-echo "🌐 Ready to view the map? Press Enter to open localhost:5002 in your default browser..."
-read -r
-echo "🚀 Opening http://localhost:5002..."
-open http://localhost:5002
+if [[ "$(docker inspect --format '{{.State.ExitCode}}' "$indexer_id")" != 0 ]]; then
+    echo "Indexing failed. Check docker compose logs data_indexer." >&2
+    exit 1
+fi
+echo "Map ready at http://localhost:5002"
+echo "Address search requires a populated GNAF_SCHEMA (default gnaf_202502)."
+echo "Check the worker with: docker compose logs gnaf_worker"
+if [[ "${1:-}" == --open ]]; then
+    if command -v open >/dev/null 2>&1; then open http://localhost:5002
+    elif command -v xdg-open >/dev/null 2>&1; then xdg-open http://localhost:5002
+    fi
+fi

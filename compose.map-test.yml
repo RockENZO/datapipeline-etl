@@ -1,0 +1,29 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.4
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 5s
+      retries: 60
+  indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile.indexer
+    environment:
+      ELASTICSEARCH_HOST: elasticsearch
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+  integration:
+    build: ./web_map
+    command: python tests/integration_map.py
+    environment:
+      ELASTICSEARCH_HOST: elasticsearch
+    volumes:
+      - ./tests:/app/tests:ro
+    depends_on:
+      indexer:
+        condition: service_completed_successfully

@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: test
+    volumes:
+      - ./tests/gnaf_fixture.sql:/docker-entrypoint-initdb.d/fixture.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      retries: 30
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 30
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.gnaf
+    command: celery -A GNAF_search_api.celery worker --loglevel=info --concurrency=1
+    environment: &env
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: test
+      REDIS_HOST: redis
+      GNAF_SCHEMA: gnaf_test
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  integration:
+    build:
+      context: .
+      dockerfile: Dockerfile.gnaf
+    command: python tests/integration_gnaf.py
+    environment: *env
+    volumes:
+      - ./tests:/app/tests:ro
+    depends_on:
+      worker:
+        condition: service_started

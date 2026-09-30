@@ -1,5 +1,6 @@
 import os
 import logging
+import math
 from flask import Flask, render_template, request, jsonify
 from elasticsearch import Elasticsearch
 
@@ -81,7 +82,7 @@ DATASETS = {
     },
     'residential_waste_recovery': {
         'name': 'Waste Recovery',
-        'geometry_type': 'point',
+        'geometry_type': 'polygon',
         'search_fields': ['properties.All_', 'properties.F2018_19'],
         'display_field': 'All_',
         'color': '#95a5a6',
@@ -125,7 +126,12 @@ def search_dataset(dataset):
     
     query = request.args.get('query', '')
     bbox = request.args.get('bbox')  # Bounding box for map extent
-    size = int(request.args.get('size', 1000))  # Default to 1000 results
+    try:
+        size = int(request.args.get('size', 1000))
+        if not 1 <= size <= 1000:
+            raise ValueError
+    except ValueError:
+        return jsonify({"success": False, "error": "size must be an integer from 1 to 1000"}), 400
     
     dataset_config = DATASETS[dataset]
     
@@ -140,7 +146,8 @@ def search_dataset(dataset):
         search_body["query"] = {
             "multi_match": {
                 "query": query,
-                "fields": dataset_config['search_fields']
+                "fields": dataset_config['search_fields'],
+                "lenient": True
             }
         }
     else:
@@ -151,6 +158,8 @@ def search_dataset(dataset):
         try:
             # bbox format: "west,south,east,north"
             west, south, east, north = map(float, bbox.split(','))
+            if not all(math.isfinite(v) for v in (west, south, east, north)) or not (-180 <= west <= east <= 180 and -90 <= south <= north <= 90):
+                raise ValueError('Invalid bbox bounds')
             
             if dataset_config['geometry_type'] == 'point':
                 geo_filter = {
@@ -244,7 +253,7 @@ def search_dataset(dataset):
         
     except Exception as e:
         logger.error(f"Search error for {dataset}: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Search service unavailable"}), 503
 
 @app.route('/api/<dataset>/<doc_id>')
 def get_detail(dataset, doc_id):
@@ -261,7 +270,7 @@ def get_detail(dataset, doc_id):
         })
     except Exception as e:
         logger.error(f"Error fetching {dataset} detail: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Search service unavailable"}), 503
 
 @app.route('/health')
 def health():
@@ -271,9 +280,9 @@ def health():
         if es.ping():
             return jsonify({"status": "healthy", "elasticsearch": "connected"})
         else:
-            return jsonify({"status": "healthy", "elasticsearch": "disconnected", "message": "Web app is running, Elasticsearch not ready yet"})
+            return jsonify({"status": "not_ready", "elasticsearch": "disconnected"}), 503
     except Exception as e:
-        return jsonify({"status": "healthy", "elasticsearch": "error", "message": "Web app is running", "error": str(e)})
+        return jsonify({"status": "not_ready", "elasticsearch": "error"}), 503
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)

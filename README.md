@@ -1,265 +1,64 @@
-## Project Overview
+# Sydney spatial ETL and search
 
-This project is designed to manage and process spatial data for Sydney, including building complex points, stairs, recreation centres, and other urban infrastructure. The system provides an interactive web map interface and API endpoints for searching across multiple datasets using technologies including Flask, Elasticsearch, PostgreSQL, and Celery. The project is structured to facilitate easy deployment and scaling using Docker containers.
+Docker application that indexes user-supplied Sydney GeoJSON datasets into Elasticsearch and serves an interactive map. A separate address API submits PostgreSQL searches through Redis to a Celery worker.
 
-## 🗺️ Sydney Multi-Dataset Interactive Map
+![Map demo](data/demo_image.png)
 
-The enhanced map application provides a comprehensive visualization platform for Sydney's spatial data, supporting multiple dataset types including points, polygons, and complex geometries.
+## Run the map
 
-## Demo
-![demo1](./data/demo_image.png)
-![demo2](./data/demo_image2.png)
+Requires Docker with Compose v2, Python 3, Bash and curl. The repository contains screenshots but does not distribute the original city data files. From the repository root:
 
-### Project Structure
-
-- **es_index_multi_docker.py**: Enhanced multi-dataset indexing script that processes 10+ different spatial datasets with support for both point and polygon geometries.
-
-- **web_map/app.py**: Flask web application serving the interactive map interface with multi-dataset support, search functionality, and dynamic layer controls.
-
-- **web_map/templates/index.html**: Interactive map interface with dataset selector, layer controls, search functionality, and responsive design.
-
-- **start-map.sh**: Automated startup script that handles data verification, service orchestration, health checks, and data indexing.
-
-- **api_data_index.py**: Contains functions to fetch, transform, and index API data into Elasticsearch. Utilizes the `apscheduler` library for periodic updates.
-  
-- **GNAF_search_api.py**: Sets up a Flask application that provides an API for searching addresses. It uses Celery for asynchronous task processing and connects to a PostgreSQL database.
-
-- **es_search_api.py**: Establishes a Flask application with endpoints for searching data in Elasticsearch indices, supporting multiple dataset types.
-
-- **es_index.py**: Legacy single-dataset indexing script for building complex points (superseded by es_index_multi_docker.py).
-
-- **celery_config.py**: Contains a function to create and configure a Celery instance for task management.
-
-- **docker-compose.yml**: Defines the multi-service architecture including Elasticsearch, PostgreSQL, Redis, web map, data indexer, and API services.
-
-## 🚀 Quick Start - Interactive Map Application
-
-### **One-Command Startup**
 ```bash
-./start-map.sh
+./start-map.sh --demo           # create 11 labelled synthetic records and start the map
+./start-map.sh --open           # use existing inputs and additionally open the browser
 ```
 
-This automated script will:
-1. **Verify Data Files** - Check all 10+ dataset files are present
-2. **Build & Start Services** - Launch Elasticsearch, web map, and supporting services
-3. **Index Datasets** - Process and index 76,000+ spatial data points
-4. **Health Checks** - Ensure all services are ready
-5. **Launch Map** - Interactive map available at http://localhost:5002
+Open http://localhost:5002. Startup fails when required input files are missing or indexing fails. Inspect `docker compose logs data_indexer web_map`. Configure `STARTUP_TIMEOUT` (default 180 seconds) and `INDEX_TIMEOUT` (300 seconds) for slower machines. The map `/health` returns HTTP 503 when Elasticsearch is unavailable.
 
-### **Shutdown Process**
 ```bash
-# Stop all services
-docker-compose down
-
-# Stop services and remove data volumes (complete cleanup)
-docker-compose down -v
+docker compose ps
+docker compose logs -f gnaf_worker
+docker compose down            # retain data volumes
 ```
 
-### **Available Datasets**
-The map includes the following Sydney datasets:
-- **Building Complex Points** (76,200 records) - Major buildings and complexes
-- **Stairs** (523 records) - Public stairways and steps
-- **Recreation Centres** (6 records) - Community recreation facilities
-- **Information Kiosks** (2 records) - Public information displays
-- **Business Rate Categories** (3 records) - Commercial zone classifications
-- **Free 15-Minute Parking** - Short-term parking zones
-- **Ticket Parking Rates** - Paid parking areas
-- **NSW Ambulance Stations** - Emergency service locations
-- **Height of Building** - Building height data
-- **Library Details** - Public library information
+## Address search
 
-### **Map Features**
-- **Interactive Map Interface** - Pan, zoom, and explore Sydney
-- **Dataset Selector** - Switch between different data types
-- **Search Functionality** - Find specific locations or features
-- **Layer Controls** - Toggle dataset visibility
-- **Responsive Design** - Works on desktop and mobile devices
+Address services are opt-in: `COMPOSE_PROFILES=address ./start-map.sh`. Live bus indexing is separately opt-in with `COMPOSE_PROFILES=live`. The GNAF loader image and its database are an external prerequisite. Set `GNAF_SCHEMA` to the populated schema containing `address_principals`; the default is `gnaf_202502`. Database readiness does not imply GNAF data has been loaded. Set `POSTGRES_PASSWORD` consistently using an untracked `.env` file. PostgreSQL, Redis and Elasticsearch are bound to loopback on the host; this demo has no public-service authentication.
 
-### **Service Management**
 ```bash
-# Check service status
-docker-compose ps
-
-# View logs
-docker-compose logs -f web_map
-docker-compose logs data_indexer
-
-# Restart services
-docker-compose restart
-
-# Access map
-open http://localhost:5002
+curl 'http://localhost:5001/search?address=95%20Balo%20Street&state=NSW'
+curl 'http://localhost:5001/search?address=95%20Balo%20Street&state=NSW&async=true'
+# Poll the returned results_url on port 5001.
 ```
 
-## Setup Instructions (Legacy/Development)
+Synchronous search returns a JSON array, 400 for invalid input, 504 for timeout, or 503 for unavailable dependencies. Async search returns 202 and a task identifier; `/results/<task_id>` returns 200 when complete, 503 on failure, or 202 while pending/unknown. Results expire after one hour. Searches return at most 100 rows. Multiword street names and optional street numbers are supported; this is substring search, not a postal address parser.
 
-1. **Clone the Repository**: 
-   Clone this repository to your local machine.
+## Real data inputs
 
-2. **Install Docker**: 
-   Ensure that Docker and Docker Compose are installed on your machine.
+Place the eleven filenames listed in `make_demo_data.py` under `data/`, using the original source GeoJSON exports and the indicated wrapper structure. The demo generator refuses to overwrite existing files. Synthetic data is for exercising the application, not evidence of infrastructure coverage or ETL throughput. Original city data acquisition, licensing and freshness must be documented for a real-data deployment.
 
-3. **Build Docker Images**: 
-   Navigate to the project directory and build the Docker images using the following command:
-   ```
-   docker-compose build
-   ```
+## Verify
 
-4. **Start Services**: 
-   Start all services defined in the `docker-compose.yml` file:
-   ```
-   docker-compose up -d
-   ```
+```bash
+python -m venv .venv
+. .venv/bin/activate
+pip install -r requirements-dev.txt
+python -m unittest discover -s tests -p 'test_*.py' -v
+docker compose config --quiet
+docker compose -f compose.test.yml up --build --abort-on-container-exit --exit-code-from integration
+docker compose -f compose.test.yml down -v
+```
 
-5. **Access Services**: 
-   - **Interactive Map**: `http://localhost:5002` (Main application)
-   - The GNAF search API will be available at `http://localhost:5001/search`.
-   - The Elasticsearch search API will be available at `http://localhost:5003/es_search`.
+The map integration runs `make_demo_data.py` then `docker compose -f compose.map-test.yml run --build --rm integration` and verifies every visible dataset search. Clean up with `docker compose -f compose.map-test.yml down -v`.
 
-6. **Stop and Clean Up**: 
-   To stop and remove all containers, run:
-   ```
-   docker-compose down
-   ```
+The address integration stack uses a two-row synthetic PostgreSQL fixture and a real Redis broker plus a separate Celery worker. It proves task execution without downloading the full GNAF database. CI runs both API failure tests and this integration. It does not claim full GNAF import validation, live bus availability, production load capacity, or current dataset freshness.
 
-## Gnaf loader
-1. Pull the image using `docker pull minus34/gnafloader:latest`
-2. Run using `docker run --publish=5433:5432 minus34/gnafloader:latest`
-3. Access Postgres in the container via port `5433`. Default login is - user: `postgres`, password: `password`
-### To check the search path
-`psql -h localhost -p 5433 -U postgres -d postgres`
-### Changing search path
-`SET search_path TO gnaf_202502, public;`
-### Start Redis server
-`brew services start redis`
-### Check if Redis is running
-`redis-cli ping`
-### Run Celery Worker
-`celery -A search_api.celery worker --loglevel=info`
-### Stop Redis server
-`brew services stop redis`
+## Architecture
 
-<!-- ### Example Usage(GNAF):
-To search with only the street number: `curl "http://localhost:5001/search?address=95"`
-To search with street number and name: `curl "http://localhost:5001/search?address=95%20Balo"`
-To search with full address: `curl "http://localhost:5001/search?address=95%20Balo%20Street"`
-To search with state: `curl "http://localhost:5001/search?address=95%20Balo%20Street&state=NSW"` -->
+- `es_index_multi_docker.py`: validates required supplied inputs, transforms geometry and bulk indexes; failures exit nonzero.
+- `web_map/app.py`: map, bounded searches, GeoJSON response and dependency health.
+- `GNAF_search_api.py`: validated address requests, bounded synchronous wait and asynchronous polling.
+- `docker-compose.yml`: map, Elasticsearch, address API, worker, Redis, GNAF database and optional live bus indexing.
+- `compose.test.yml`: reproducible address integration fixture.
 
-## Elastic Search Engine
-### Pull elasticsearch docker image
-`docker pull docker.elastic.co/elasticsearch/elasticsearch:7.17.4`
-### Run elasticsearch in docker
-`docker run -d --name elasticsearch -p 9200:9200 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.17.4`
-### Delete existing index
-`curl -X DELETE "http://localhost:9200/building_complex_points"`
-### Verify the data indexed
-`curl -X GET "http://localhost:9200/building_complex_points/_search?pretty"`
-`curl -X GET "http://localhost:9200/pedestrian_counts/_search?pretty"`
-`curl -X GET "http://localhost:9200/stairs/_search?pretty"`
-### List all indices in Elasticsearch
-`curl -X GET "http://localhost:9200/_cat/indices?v"`
-### Stop elasticsearch docker container
-`docker stop elasticsearch`
-### Remove stopped es container
-`docker rm elasticsearch`
-
-<!-- ### ES data query usage:
-To search in Elasticsearch;
-`curl "http://localhost:5003/es_search/building_complex_points?query=GREENWICH%20HOSPITAL"`
-`curl "http://localhost:5003/es_search/pedestrian_counts?query=Park%20Street"` -->
-
-
-### Usage Examples
-
-- **GNAF Search API**:
-  - To search with only the street number: 
-    ```
-    curl "http://localhost:5001/search?address=95"
-    ```
-  - To search with street number and name: 
-    ```
-    curl "http://localhost:5001/search?address=95%20Balo"
-    ```
-  - To search with full address: 
-    ```
-    curl "http://localhost:5001/search?address=95%20Balo%20Street"
-    ```
-  - To search with state: 
-    ```
-    curl "http://localhost:5001/search?address=95%20Balo%20Street&state=NSW"
-    ```
-
-- **Elasticsearch Queries**:
-  - **Web Map Search**: Access the interactive map at http://localhost:5002 and use the built-in search interface
-  - To search in Elasticsearch for building complex points:
-    ```
-    curl "http://localhost:5003/es_search/building_complex_points?query=GREENWICH%20HOSPITAL"
-    ```
-  - To search for pedestrian counts:
-    ```
-    curl "http://localhost:5003/es_search/pedestrian_counts?query=Park%20Street"
-    ```
-  - To search for height of building:
-    ```
-    curl "http://localhost:5003/es_search/height_of_building?query=Liverpool"
-    ```
-  - To search for stairs data:
-    ```
-    curl "http://localhost:5003/es_search/stairs?query=Billyard"
-    ```
-  - To search for recreation centres:
-    ```
-    curl "http://localhost:5003/es_search/recreation_centres?query=Redfern"
-    ```
-  - To search for information kiosks:
-    ```
-    curl "http://localhost:5003/es_search/information_kiosks?query=Customs"
-    ```
-  - To search for ambulance station:
-    ```
-    curl "http://localhost:5003/es_search/ambulance_stations?query=CALVARY"
-    ```
-  - To search for bicycle network data:
-    ```
-    curl "http://localhost:5003/es_search/bicycle_network?query=Carrington"
-    ```
-  - To search for free 15 mins parking:
-    ```
-    curl "http://localhost:5003/es_search/free_15_minute_parking?query=King"
-    ```
-  - To search for residential waste recovery data:
-    ```
-    curl "http://localhost:5003/es_search/residential_waste_recovery?query=All"
-    ```
-  - To search for business rate category shape data:
-    ```
-    curl "http://localhost:5003/es_search/business_rate_category?query=Business"
-    ```
-  - To search for urban centres and localities:
-    ```
-    curl "http://localhost:5003/es_search/ucl?query=Sydney"
-    ```
-  - To search for ticket parking rates data:
-    ```
-    curl "http://localhost:5003/es_search/ticket_parking_rates?query=2022"
-    ```
-  - To search for parking permits areas data:
-    ```
-    curl "http://localhost:5003/es_search/parking_permits_areas?query=Pyrmont"
-    ```
-  - To search for Natural Disaster Declaration data:
-    ```
-    curl "http://localhost:5003/es_search/lga_ndd_total?type=Polygon"
-    ```
-  - To search for Destination Zones data:
-    ```
-    curl "http://localhost:5003/es_search/dzn?query=Bombala"
-    ```
-  - To search for Library Accessibility Information:
-    ```
-    curl "http://localhost:5003/es_search/library_details/has_feature?field=Toilet_Accessible"
-    ```
-
-### Conclusion
-
-This project provides a comprehensive spatial data visualization platform for Sydney, featuring an interactive web map interface and robust API framework for managing multiple datasets. The enhanced multi-dataset architecture supports various geometry types (points, polygons, multipolygons) and provides both visual exploration through the web interface and programmatic access through REST APIs. By leveraging Docker, the application can be easily deployed and scaled, ensuring efficient data processing, indexing, and retrieval across 76,000+ spatial data points.
+Source data and upstream GNAF loader retain their respective licensing and attribution requirements. Before a hosted deployment, add authentication, TLS, rate limits, secret management, backups, monitoring and capacity tests.
