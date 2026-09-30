@@ -1,0 +1,37 @@
+name: Verify services
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-dev.txt
+      - run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - run: bash -n start-map.sh
+      - run: docker compose config --quiet
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f compose.test.yml up --build --abort-on-container-exit --exit-code-from integration
+        timeout-minutes: 10
+      - if: always()
+        run: docker compose -f compose.test.yml logs
+      - if: always()
+        run: docker compose -f compose.test.yml down -v
+  map-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 make_demo_data.py
+      - run: docker compose -f compose.map-test.yml run --build --rm integration
+        timeout-minutes: 10
+      - if: always()
+        run: docker compose -f compose.map-test.yml logs
+      - if: always()
+        run: docker compose -f compose.map-test.yml down -v

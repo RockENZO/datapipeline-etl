@@ -1,117 +1,94 @@
-from flask import Flask, request, jsonify
-import psycopg2
-from celery import Celery
+"""Address search API with a separately deployed Celery worker."""
 import logging
 import os
 
+import psycopg2
+from psycopg2 import sql
+from celery import Celery
+from celery.exceptions import TimeoutError as TaskTimeout
+from flask import Flask, jsonify, request, url_for
+
 app = Flask(__name__)
+redis_host = os.getenv("REDIS_HOST", "localhost")
+celery = Celery(app.import_name,
+                broker=f"redis://{redis_host}:6379/0",
+                backend=f"redis://{redis_host}:6379/0")
+celery.conf.update(task_track_started=True, task_time_limit=35,
+                   broker_connection_retry_on_startup=True, result_expires=3600)
 
-# Celery configuration
-redis_host = os.getenv('REDIS_HOST', 'localhost')
-app.config.update(
-    CELERY_BROKER_URL=f'redis://{redis_host}:6379/0',
-    CELERY_RESULT_BACKEND=f'redis://{redis_host}:6379/0'
-)
-
-def make_celery(app):
-    celery = Celery(
-        app.import_name,
-        backend=app.config['CELERY_RESULT_BACKEND'],
-        broker=app.config['CELERY_BROKER_URL']
-    )
-    celery.conf.update(app.config)
-    celery.autodiscover_tasks(['search_api'])
-    return celery
-
-celery = make_celery(app)
-
-# Database connection parameters
-DB_HOST = os.getenv('POSTGRES_HOST', 'localhost')
-DB_PORT = "5432"  # Use internal port since we're in Docker
-DB_NAME = "postgres"
-DB_USER = "postgres"
-DB_PASSWORD = "password"
 
 def get_db_connection():
-    conn = psycopg2.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD
-    )
-    return conn
+    return psycopg2.connect(
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=os.getenv("POSTGRES_PORT", "5432"),
+        dbname=os.getenv("POSTGRES_DB", "postgres"),
+        user=os.getenv("POSTGRES_USER", "postgres"),
+        password=os.getenv("POSTGRES_PASSWORD", "password"),
+        connect_timeout=5)
 
-@celery.task(name='search_api.search_task')
+
+@celery.task(name="gnaf.search")
 def search_task(address, state):
-    # Split the address into components
-    address_parts = address.split()
-    number_first = address_parts[0] if len(address_parts) > 0 else None
-    street_name = address_parts[1].upper() if len(address_parts) > 1 else None
-    street_type = address_parts[2].upper() if len(address_parts) > 2 else None
-
-    logging.info(f"Searching for address: {address}, state: {state}")
-    logging.info(f"Parsed address parts - number_first: {number_first}, street_name: {street_name}, street_type: {street_type}")
-
+    parts = address.split()
+    number = int(parts[0]) if parts and parts[0].isdigit() else None
+    street_parts = parts[1:] if number is not None else parts
+    street = " ".join(street_parts).upper() or None
+    query = sql.SQL("""
+        SELECT DISTINCT latitude, longitude, number_first, street_name, street_type, state
+        FROM {}.address_principals
+        WHERE (%s IS NULL OR number_first = %s)
+          AND (%s IS NULL OR CONCAT_WS(' ', street_name, street_type) ILIKE %s)
+          AND (%s IS NULL OR state = %s)
+        ORDER BY street_name, number_first
+        LIMIT 100
+    """).format(sql.Identifier(os.getenv("GNAF_SCHEMA", "gnaf_202502")))
     conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # Build the query dynamically based on available parts
-    query = """
-    SET search_path TO gnaf_202502, public;
-    SELECT DISTINCT latitude, longitude, number_first, street_name, street_type, state
-    FROM address_principals
-    WHERE (%s IS NULL OR number_first = %s)
-    AND (%s IS NULL OR street_name ILIKE %s)
-    AND (%s IS NULL OR street_type ILIKE %s)
-    AND (%s IS NULL OR state = %s);
-    """
-    cur.execute(query, (number_first, number_first, street_name, f"%{street_name}%", street_type, f"%{street_type}%", state, state))
-    results = cur.fetchall()
-    cur.close()
-    conn.close()
-    
-    logging.info(f"Query results: {results}")
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SET statement_timeout TO 25000")
+            cur.execute(query, (number, number, street, f"%{street}%" if street else None, state, state))
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+    keys = ("latitude", "longitude", "number_first", "street_name", "street_type", "state")
+    return [dict(zip(keys, row)) for row in rows]
 
-    return [{
-        "latitude": result[0],
-        "longitude": result[1],
-        "number_first": result[2],
-        "street_name": result[3],
-        "street_type": result[4],
-        "state": result[5]
-    } for result in results]
 
-@app.route('/search', methods=['GET'])
+@app.get("/search")
 def search():
-    address = request.args.get('address')
-    state = request.args.get('state')
-    if not address:
-        return jsonify({"error": "Address parameter is required"}), 400
+    address = request.args.get("address", "").strip()
+    state = request.args.get("state", "").strip().upper() or None
+    if not address or len(address) > 200:
+        return jsonify(error="Provide an address of 1–200 characters"), 400
+    if state and state not in {"NSW", "VIC", "QLD", "SA", "WA", "TAS", "ACT", "NT"}:
+        return jsonify(error="Invalid Australian state"), 400
+    try:
+        task = search_task.apply_async(args=[address, state])
+        if request.args.get("async", "false").lower() == "true":
+            location = url_for("get_results", task_id=task.id)
+            return jsonify(task_id=task.id, status="pending", results_url=location), 202, {"Location": location}
+        return jsonify(task.get(timeout=30)), 200
+    except TaskTimeout:
+        return jsonify(error="Address search timed out; retry or use async=true"), 504
+    except Exception:
+        app.logger.exception("Address search failed")
+        return jsonify(error="Address search service unavailable"), 503
 
-    task = search_task.apply_async(args=[address, state])
-    result = task.get(timeout=30)  # Wait for the task to complete with a timeout
-    return jsonify(result), 200
 
-@app.route('/results/<task_id>', methods=['GET'])
+@app.get("/results/<task_id>")
 def get_results(task_id):
-    task = search_task.AsyncResult(task_id)
-    if task.state == 'PENDING':
-        response = {
-            'state': task.state,
-            'status': 'Pending...'
-        }
-    elif task.state != 'FAILURE':
-        response = {
-            'state': task.state,
-            'result': task.result
-        }
-    else:
-        response = {
-            'state': task.state,
-            'status': str(task.info)  # this is the exception raised
-        }
-    return jsonify(response)
+    try:
+        task = search_task.AsyncResult(task_id)
+        state = task.state
+    except Exception:
+        app.logger.exception("Result backend unavailable")
+        return jsonify(error="Result service unavailable"), 503
+    if state == "SUCCESS":
+        return jsonify(state=task.state, result=task.result), 200
+    if state == "FAILURE":
+        return jsonify(state=task.state, error="Address search failed"), 503
+    return jsonify(state=task.state, status="Pending or unknown task; results expire after one hour"), 202
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5001, debug=False)

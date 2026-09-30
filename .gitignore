@@ -34,3 +34,11 @@ DZN_SPHERICAL_MERCATOR.json
 Library_details.geojson
 
 
+
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.DS_Store
+data/*.geojson
+data/*.json

@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.4
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.29
     container_name: elasticsearch
     ports:
-      - "9200:9200"
+      - "127.0.0.1:9200:9200"
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -19,13 +17,14 @@ services:
       retries: 5
 
   postgres:
+    profiles: [address]
     image: minus34/gnafloader:latest
     container_name: postgres
     ports:
-      - "5433:5432"  # Map container's port 5432 to host's port 5433
+      - "127.0.0.1:5433:5432"  # Map container's port 5432 to host's port 5433
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -37,10 +36,11 @@ services:
       retries: 5
 
   redis:
+    profiles: [address]
     image: redis:latest
     container_name: redis
     ports:
-      - "6379:6379"  # Default Redis port
+      - "127.0.0.1:6379:6379"  # Default Redis port
     volumes:
       - redis_data:/data
     restart: always
@@ -63,7 +63,7 @@ services:
         condition: service_healthy
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=5)"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -83,6 +83,7 @@ services:
     restart: "no"  # Run once to index data
 
   gnaf_api:
+    profiles: [address]
     build:
       context: .
       dockerfile: Dockerfile.gnaf
@@ -92,6 +93,26 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - GNAF_SCHEMA=${GNAF_SCHEMA:-gnaf_202502}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+
+  gnaf_worker:
+    profiles: [address]
+    build:
+      context: .
+      dockerfile: Dockerfile.gnaf
+    command: celery -A GNAF_search_api.celery worker --loglevel=info --concurrency=2
+    environment:
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - GNAF_SCHEMA=${GNAF_SCHEMA:-gnaf_202502}
     depends_on:
       postgres:
         condition: service_healthy
@@ -114,6 +135,7 @@ services:
     restart: always
 
   live_bus_indexer:
+    profiles: [live]
     build:
       context: .
       dockerfile: Dockerfile.live_bus
