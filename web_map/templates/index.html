@@ -280,6 +280,7 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
+    <script src="{{ url_for('static', filename='popup_safety.js') }}"></script>
     <script>
         // Initialize map centered on Sydney
         const map = L.map('map').setView([-33.8688, 151.2093], 12);
@@ -399,16 +400,16 @@
             
             let content = `
                 <div class="popup-content">
-                    <div class="popup-title">${dataset.icon} ${displayName}</div>
+                    <div class="popup-title">${escapeHtml(dataset.icon)} ${escapeHtml(displayName)}</div>
                     <div class="popup-info">
-                        <div><strong>Dataset:</strong> ${dataset.name}</div>
+                        <div><strong>Dataset:</strong> ${escapeHtml(dataset.name)}</div>
             `;
             
             // Add relevant properties
             Object.entries(props).forEach(([key, value]) => {
-                if (!key.startsWith('_') && value && key !== dataset.display_field) {
+                if (!key.startsWith('_') && value !== null && value !== undefined && value !== '' && key !== dataset.display_field) {
                     const cleanKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                    content += `<div><strong>${cleanKey}:</strong> ${value}</div>`;
+                    content += `<div><strong>${escapeHtml(cleanKey)}:</strong> ${escapeHtml(value)}</div>`;
                 }
             });
             
@@ -507,12 +508,12 @@
             if (dataset.name === 'Live Buses') {
                 return `
                     <div class="popup-content">
-                        <div class="popup-title">🚌 Bus ${props.route_id || 'Unknown Route'}</div>
+                        <div class="popup-title">🚌 Bus ${escapeHtml(props.route_id || 'Unknown Route')}</div>
                         <div class="popup-info">
-                            <div><strong>Vehicle:</strong> ${props.vehicle_label || 'N/A'}</div>
-                            <div><strong>Trip ID:</strong> ${props.trip_id || 'N/A'}</div>
-                            <div><strong>Speed:</strong> ${props.speed ? `${props.speed} km/h` : 'N/A'}</div>
-                            <div><strong>Status:</strong> ${props.occupancy_status || 'Unknown'}</div>
+                            <div><strong>Vehicle:</strong> ${escapeHtml(props.vehicle_label || 'N/A')}</div>
+                            <div><strong>Trip ID:</strong> ${escapeHtml(props.trip_id || 'N/A')}</div>
+                            <div><strong>Speed:</strong> ${props.speed != null && props.speed !== '' ? `${escapeHtml(props.speed)} km/h` : 'N/A'}</div>
+                            <div><strong>Status:</strong> ${escapeHtml(props.occupancy_status || 'Unknown')}</div>
                             <div><strong>Last Update:</strong> ${props.timestamp ? new Date(props.timestamp * 1000).toLocaleTimeString() : 'N/A'}</div>
                         </div>
                     </div>
