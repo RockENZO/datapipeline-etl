@@ -2,7 +2,7 @@ import os
 import logging
 import math
 from flask import Flask, render_template, request, jsonify
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, NotFoundError
 
 app = Flask(__name__)
 
@@ -268,6 +268,11 @@ def get_detail(dataset, doc_id):
             "data": response['_source'],
             "dataset": DATASETS[dataset]
         })
+    except NotFoundError as error:
+        if error.error == "index_not_found_exception":
+            logger.error("Dataset index unavailable for %s", dataset)
+            return jsonify({"success": False, "error": "Search service unavailable"}), 503
+        return jsonify({"success": False, "error": "Item not found"}), 404
     except Exception as e:
         logger.error(f"Error fetching {dataset} detail: {e}")
         return jsonify({"success": False, "error": "Search service unavailable"}), 503
