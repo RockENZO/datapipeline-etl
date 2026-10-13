@@ -4,6 +4,7 @@ import GNAF_search_api as gnaf
 import web_map.app as web
 import es_index_multi_docker as indexer
 from celery.exceptions import TimeoutError
+from elasticsearch import NotFoundError
 
 class ServiceTests(unittest.TestCase):
     def test_search_validation(self):
@@ -53,6 +54,26 @@ class ServiceTests(unittest.TestCase):
         with patch.object(web.es, 'search', return_value=result):
             response = client.get('/api/search/stairs').json
             self.assertEqual(response['data']['features'][0]['geometry']['coordinates'], [151, -33])
+
+    def test_missing_map_document_returns_not_found(self):
+        with patch.object(web.es,'get',side_effect=NotFoundError(404,'not found',{})):
+            response=web.app.test_client().get('/api/stairs/missing')
+        self.assertEqual(response.status_code,404)
+        self.assertFalse(response.json['success'])
+        self.assertEqual(response.json['error'],'Item not found')
+
+    def test_missing_dataset_index_remains_service_unavailable(self):
+        error=NotFoundError(404,'index_not_found_exception',{})
+        with patch.object(web.es,'get',side_effect=error):
+            response=web.app.test_client().get('/api/stairs/item')
+        self.assertEqual(response.status_code,503)
+        self.assertEqual(response.json['error'],'Search service unavailable')
+
+    def test_map_document_backend_failure_remains_unavailable(self):
+        with patch.object(web.es,'get',side_effect=RuntimeError('internal-secret')):
+            response=web.app.test_client().get('/api/stairs/item')
+        self.assertEqual(response.status_code,503)
+        self.assertNotIn('internal-secret',response.get_data(as_text=True))
 
     def test_indexing_failure_is_fatal(self):
         with patch.object(indexer, 'es', Mock()):

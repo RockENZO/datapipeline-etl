@@ -10,6 +10,9 @@ assert '/static/popup_safety.js' in page.get_data(as_text=True)
 helper = client.get('/static/popup_safety.js')
 assert helper.status_code == 200, 'Built web image must include popup safety assets'
 assert 'function escapeHtml' in helper.get_data(as_text=True)
+missing = client.get('/api/stairs/nonexistent-integration-record')
+assert missing.status_code == 404, missing.get_data(as_text=True)
+assert missing.json['error'] == 'Item not found'
 for dataset in DATASETS:
     if dataset == 'live_buses':
         continue
