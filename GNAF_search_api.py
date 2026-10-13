@@ -80,14 +80,15 @@ def get_results(task_id):
     try:
         task = search_task.AsyncResult(task_id)
         state = task.state
+        result = task.result if state == "SUCCESS" else None
     except Exception:
         app.logger.exception("Result backend unavailable")
         return jsonify(error="Result service unavailable"), 503
     if state == "SUCCESS":
-        return jsonify(state=task.state, result=task.result), 200
+        return jsonify(state=state, result=result), 200
     if state == "FAILURE":
-        return jsonify(state=task.state, error="Address search failed"), 503
-    return jsonify(state=task.state, status="Pending or unknown task; results expire after one hour"), 202
+        return jsonify(state=state, error="Address search failed"), 503
+    return jsonify(state=state, status="Pending or unknown task; results expire after one hour"), 202
 
 
 if __name__ == "__main__":

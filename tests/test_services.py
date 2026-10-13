@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, PropertyMock
 import GNAF_search_api as gnaf
 import web_map.app as web
 import es_index_multi_docker as indexer
@@ -39,6 +39,25 @@ class ServiceTests(unittest.TestCase):
     def test_result_backend_failure(self):
         with patch.object(gnaf.search_task, 'AsyncResult', side_effect=RuntimeError()):
             self.assertEqual(gnaf.app.test_client().get('/results/abc').status_code, 503)
+
+    def test_success_result_backend_failure_is_unavailable(self):
+        task=Mock()
+        task.state='SUCCESS'
+        type(task).result=PropertyMock(side_effect=RuntimeError('backend-secret'))
+        with patch.object(gnaf.search_task, 'AsyncResult', return_value=task):
+            response=gnaf.app.test_client().get('/results/abc')
+        self.assertEqual(response.status_code,503)
+        self.assertEqual(response.json['error'],'Result service unavailable')
+        self.assertNotIn('backend-secret',response.get_data(as_text=True))
+
+    def test_result_state_is_read_once(self):
+        task=Mock()
+        type(task).state=PropertyMock(side_effect=['SUCCESS', RuntimeError('backend-secret')])
+        task.result=[{'latitude':-33}]
+        with patch.object(gnaf.search_task, 'AsyncResult', return_value=task):
+            response=gnaf.app.test_client().get('/results/abc')
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(response.json,{'state':'SUCCESS','result':[{'latitude':-33}]})
 
     def test_health_dependency(self):
         with patch.object(web.es, 'ping', return_value=False):
