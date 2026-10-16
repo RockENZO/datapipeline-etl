@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, patch, PropertyMock
+from unittest.mock import Mock, MagicMock, patch, PropertyMock
 import GNAF_search_api as gnaf
 import web_map.app as web
 import es_index_multi_docker as indexer
@@ -58,6 +58,28 @@ class ServiceTests(unittest.TestCase):
             response=gnaf.app.test_client().get('/results/abc')
         self.assertEqual(response.status_code,200)
         self.assertEqual(response.json,{'state':'SUCCESS','result':[{'latitude':-33}]})
+
+    def test_address_terms_preserve_literals_and_handle_unicode_digits(self):
+        for address,number,pattern in [
+            ('95 B%LO_ST\\REET',95,r'%B\%LO\_ST\\REET%'),
+            ('² Main',None,'%² MAIN%'),
+            ('٩٥ Balo Street',95,'%BALO STREET%'),
+        ]:
+            with self.subTest(address=address):
+                conn=MagicMock();cursor=conn.cursor.return_value.__enter__.return_value
+                cursor.fetchall.return_value=[]
+                with patch.object(gnaf,'get_db_connection',return_value=conn):
+                    self.assertEqual(gnaf.search_task.run(address,None),[])
+                params=cursor.execute.call_args.args[1]
+                self.assertEqual(params[0],number)
+                self.assertEqual(params[3],pattern)
+                conn.close.assert_called_once()
+
+    def test_out_of_range_address_number_is_a_client_error(self):
+        with patch.object(gnaf.search_task,'apply_async') as submit:
+            response=gnaf.app.test_client().get('/search?address=2147483648%20Main')
+            self.assertEqual(response.status_code,400)
+            submit.assert_not_called()
 
     def test_health_dependency(self):
         with patch.object(web.es, 'ping', return_value=False):

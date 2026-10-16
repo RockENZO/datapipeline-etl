@@ -9,4 +9,7 @@ assert len(response.json) == 1, response.json
 assert response.json[0]['street_name'] == 'BALO', response.json
 response = client.get('/search?address=unknown')
 assert response.status_code == 200 and response.json == [], response.json
+for address in ['%', 'B_LO Street', '² Main']:
+    response=client.get('/search',query_string={'address':address})
+    assert response.status_code==200 and response.json==[], response.json
 print('PASS: real broker, worker, database and API round trip')

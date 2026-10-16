@@ -27,12 +27,20 @@ def get_db_connection():
         connect_timeout=5)
 
 
-@celery.task(name="gnaf.search")
-def search_task(address, state):
+def address_terms(address):
     parts = address.split()
-    number = int(parts[0]) if parts and parts[0].isdigit() else None
+    number = int(parts[0]) if parts and parts[0].isdecimal() else None
+    if number is not None and number > 2147483647:
+        raise ValueError("Address number exceeds the supported integer range")
     street_parts = parts[1:] if number is not None else parts
     street = " ".join(street_parts).upper() or None
+    escaped = street.replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_") if street else None
+    return number, street, f"%{escaped}%" if escaped else None
+
+
+@celery.task(name="gnaf.search")
+def search_task(address, state):
+    number, street, pattern = address_terms(address)
     query = sql.SQL("""
         SELECT DISTINCT latitude, longitude, number_first, street_name, street_type, state
         FROM {}.address_principals
@@ -46,7 +54,7 @@ def search_task(address, state):
     try:
         with conn.cursor() as cur:
             cur.execute("SET statement_timeout TO 25000")
-            cur.execute(query, (number, number, street, f"%{street}%" if street else None, state, state))
+            cur.execute(query, (number, number, street, pattern, state, state))
             rows = cur.fetchall()
     finally:
         conn.close()
@@ -62,6 +70,10 @@ def search():
         return jsonify(error="Provide an address of 1–200 characters"), 400
     if state and state not in {"NSW", "VIC", "QLD", "SA", "WA", "TAS", "ACT", "NT"}:
         return jsonify(error="Invalid Australian state"), 400
+    try:
+        address_terms(address)
+    except ValueError as error:
+        return jsonify(error=str(error)), 400
     try:
         task = search_task.apply_async(args=[address, state])
         if request.args.get("async", "false").lower() == "true":
