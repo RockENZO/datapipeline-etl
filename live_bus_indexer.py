@@ -3,7 +3,7 @@ import logging
 import os
 import time
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from elasticsearch import Elasticsearch, helpers
 import schedule
 import threading
@@ -227,8 +227,12 @@ def index_bus_data():
         return
     
     try:
-        # Delete old data (older than 5 minutes)
-        five_minutes_ago = datetime.utcnow().isoformat()
+        # Preserve the last usable snapshot if this refresh fails or is partial.
+        helpers.bulk(es, actions)
+        logger.info(f"Successfully indexed {len(actions)} bus records")
+
+        # Expire only genuinely stale records after a successful refresh.
+        five_minutes_ago = (datetime.utcnow() - timedelta(minutes=5)).isoformat()
         delete_query = {
             "query": {
                 "range": {
@@ -239,10 +243,7 @@ def index_bus_data():
             }
         }
         es.delete_by_query(index="live_buses", body=delete_query, ignore=[404])
-        
-        # Index new data
-        helpers.bulk(es, actions)
-        logger.info(f"Successfully indexed {len(actions)} bus records")
+
         
     except helpers.BulkIndexError as e:
         logger.error(f"Error during bulk indexing: {e}")
