@@ -3,3 +3,5 @@ elasticsearch==7.17.9
 celery==5.3.4
 psycopg2-binary==2.9.13
 redis==5.0.1
+requests==2.31.0
+schedule==1.2.0
