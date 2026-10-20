@@ -64,3 +64,7 @@ The address integration stack uses a two-row synthetic PostgreSQL fixture and a 
 Source data and upstream GNAF loader retain their respective licensing and attribution requirements. Before a hosted deployment, add authentication, TLS, rate limits, secret management, backups, monitoring and capacity tests.
 
 Elasticsearch is pinned to [7.17.29](https://www.elastic.co/blog/elastic-stack-7-17-29-released), retaining the 7.x client/index API while updating the bundled runtime used by the container.
+
+### HTTP dependency security maintenance
+
+Service images use Python 3.12, matching the tested runtime. Flask 3.1.3 and Requests 2.33.0 address the advisories found in the previous pins. Elasticsearch Python client 7.17.13 permits urllib3 2.x on Python 3.10+, allowing urllib3 2.8.0 while retaining the existing Elasticsearch 7 server protocol. Runtime and development requirement sets pin that HTTP transport; the map dependency set also updates Gunicorn to 26.2.0. Known-vulnerability auditing is a point-in-time Python dependency check, not a security certification of containers or live upstream services. Real PostgreSQL/Celery/Redis and Elasticsearch/map integration checks must pass before merge.
