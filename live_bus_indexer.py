@@ -167,7 +167,8 @@ def transform_bus_data(data):
             # requested with outSR=4326; explicit unsupported CRS is rejected.
             geometry = feature.get('geometry') or {}
             if lat is None or lon is None:
-                wkid = geometry.get('spatialReference', {}).get('wkid', 4326)
+                reference = geometry.get('spatialReference') or (data.get('spatialReference') if isinstance(data, dict) else None)
+                wkid = reference.get('latestWkid', reference.get('wkid')) if reference is not None else 4326
                 if wkid != 4326:
                     raise ValueError('Unsupported point spatial reference')
                 if geometry.get('type') == 'Point':

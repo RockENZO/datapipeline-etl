@@ -75,3 +75,12 @@ class BusCoordinateTests(unittest.TestCase):
             buses.index_bus_data()
         bulk.assert_not_called()
         client.delete_by_query.assert_not_called()
+
+    def test_response_level_spatial_reference_is_inherited(self):
+        feature = {'attributes': {'id': 'bus'}, 'geometry': {'x': 151, 'y': -33}}
+        for reference in [{'wkid': 4283}, {'wkid': 3857}, {'wkt': 'unknown'}]:
+            with self.subTest(reference=reference):
+                self.assertEqual(buses.transform_bus_data({'spatialReference': reference, 'features': [feature]}), [])
+        self.assertEqual(len(buses.transform_bus_data({'spatialReference': {'wkid': 4326}, 'features': [feature]})), 1)
+        feature['geometry']['spatialReference'] = {'wkid': 4326}
+        self.assertEqual(len(buses.transform_bus_data({'spatialReference': {'wkid': 4283}, 'features': [feature]})), 1)
