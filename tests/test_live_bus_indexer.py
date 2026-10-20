@@ -39,3 +39,48 @@ class BusRefreshTests(unittest.TestCase):
             buses.index_bus_data()
         bulk.assert_not_called()
         client.delete_by_query.assert_not_called()
+
+class BusCoordinateTests(unittest.TestCase):
+    def feature(self, lat=0, lon=0, identity='bus'):
+        props = {'vehicle.position.latitude': lat, 'vehicle.position.longitude': lon}
+        if identity is not None:
+            props['vehicle.vehicle.id'] = identity
+        return {'properties': props}
+
+    def test_zero_coordinates_and_zero_ids_are_valid(self):
+        actions = buses.transform_bus_data({'features': [self.feature(identity=0)]})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0]['_id'], '0')
+        self.assertEqual(actions[0]['_source']['geometry'], {'lat': 0., 'lon': 0.})
+
+    def test_invalid_coordinates_are_not_sent_to_elasticsearch(self):
+        bad = [(91, 151), (-91, 151), (-33, 181), (-33, -181), (float('nan'), 151), (-33, float('inf')), (True, 151)]
+        for lat, lon in bad:
+            with self.subTest(lat=lat, lon=lon):
+                self.assertEqual(buses.transform_bus_data({'features': [self.feature(lat, lon)]}), [])
+
+    def test_missing_identity_does_not_get_an_unstable_process_hash(self):
+        self.assertEqual(buses.transform_bus_data({'features': [self.feature(-33, 151, None)]}), [])
+
+    def test_geojson_and_arcgis_point_fallback(self):
+        for geometry in [{'type': 'Point', 'coordinates': [151, 0]}, {'x': 151, 'y': 0}]:
+            with self.subTest(geometry=geometry):
+                feature = {'attributes': {'id': 'bus'}, 'geometry': geometry}
+                action = buses.transform_bus_data({'features': [feature]})[0]
+                self.assertEqual(action['_source']['geometry'], {'lat': 0., 'lon': 151.})
+
+    def test_all_invalid_refresh_never_writes_or_deletes(self):
+        data = {'features': [self.feature(float('nan'), 151)]}
+        with patch.object(buses, 'fetch_bus_data', return_value=data), patch.object(buses.helpers, 'bulk') as bulk, patch.object(buses, 'es') as client:
+            buses.index_bus_data()
+        bulk.assert_not_called()
+        client.delete_by_query.assert_not_called()
+
+    def test_response_level_spatial_reference_is_inherited(self):
+        feature = {'attributes': {'id': 'bus'}, 'geometry': {'x': 151, 'y': -33}}
+        for reference in [{'wkid': 4283}, {'wkid': 3857}, {'wkt': 'unknown'}]:
+            with self.subTest(reference=reference):
+                self.assertEqual(buses.transform_bus_data({'spatialReference': reference, 'features': [feature]}), [])
+        self.assertEqual(len(buses.transform_bus_data({'spatialReference': {'wkid': 4326}, 'features': [feature]})), 1)
+        feature['geometry']['spatialReference'] = {'wkid': 4326}
+        self.assertEqual(len(buses.transform_bus_data({'spatialReference': {'wkid': 4283}, 'features': [feature]})), 1)

@@ -65,6 +65,10 @@ Source data and upstream GNAF loader retain their respective licensing and attri
 
 Elasticsearch is pinned to [7.17.29](https://www.elastic.co/blog/elastic-stack-7-17-29-released), retaining the 7.x client/index API while updating the bundled runtime used by the container.
 
+### Live bus input validation
+
+The live indexer accepts stable upstream vehicle IDs (including numeric zero) and finite WGS84 coordinates in latitude/longitude bounds. Missing IDs and invalid geometry are logged and skipped rather than assigned process-dependent hashes or sent to Elasticsearch. Zero coordinates are valid. Both GeoJSON Point and ArcGIS x/y points are supported; requests specify outSR=4326 and explicitly different spatial references are rejected, including those declared on the enclosing ArcGIS feature set. An all-invalid refresh performs no bulk write or stale-record deletion. This validation does not establish upstream feed completeness or paginate the existing 1,000-record query limit.
+
 ### HTTP dependency security maintenance
 
 Service images use Python 3.12, matching the tested runtime. Flask 3.1.3 and Requests 2.33.0 address the advisories found in the previous pins. Elasticsearch Python client 7.17.13 permits urllib3 2.x on Python 3.10+, allowing urllib3 2.8.0 while retaining the existing Elasticsearch 7 server protocol. Runtime and development requirement sets pin that HTTP transport; the map dependency set also updates Gunicorn to 26.2.0. Known-vulnerability auditing is a point-in-time Python dependency check, not a security certification of containers or live upstream services. Real PostgreSQL/Celery/Redis and Elasticsearch/map integration checks must pass before merge.
