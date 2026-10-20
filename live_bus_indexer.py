@@ -3,6 +3,7 @@ import logging
 import os
 import time
 import re
+import math
 from datetime import datetime, timedelta
 from elasticsearch import Elasticsearch, helpers
 import schedule
@@ -94,9 +95,9 @@ def fetch_bus_data():
         
         # Updated endpoints with the correct FeatureServer/0 structure
         endpoints = [
-            f"{BUSES_API_URL}/query?f=json&where=1=1&outFields=*&resultRecordCount=1000",
-            f"{BUSES_API_URL}/query?f=geojson&where=1=1&outFields=*&resultRecordCount=1000",
-            f"{BUSES_API_URL}?f=json&where=1=1&outFields=*"
+            f"{BUSES_API_URL}/query?f=json&where=1=1&outFields=*&outSR=4326&resultRecordCount=1000",
+            f"{BUSES_API_URL}/query?f=geojson&where=1=1&outFields=*&outSR=4326&resultRecordCount=1000",
+            f"{BUSES_API_URL}?f=json&where=1=1&outFields=*&outSR=4326"
         ]
         
         for endpoint in endpoints:
@@ -150,23 +151,36 @@ def transform_bus_data(data):
             else:
                 props = feature
             
-            # Create unique ID for each bus using the field structure you provided
-            bus_id = props.get('id') or props.get('vehicle.vehicle.id') or props.get('hashId', str(hash(str(props))))
-            
-            # Extract coordinates using the specific field names from your API structure
+            # Only stable upstream identities may overwrite an existing vehicle.
+            bus_id = next((str(props[key]).strip() for key in
+                           ('id', 'vehicle.vehicle.id', 'hashId')
+                           if isinstance(props.get(key), (str, int))
+                           and not isinstance(props.get(key), bool)
+                           and str(props[key]).strip()), None)
+            if bus_id is None:
+                logger.warning("Bus record missing a stable identity, skipping")
+                continue
+
             lat = props.get('vehicle.position.latitude')
             lon = props.get('vehicle.position.longitude')
-            
-            # Try geometry if coordinates not in properties
-            if (not lat or not lon) and 'geometry' in feature and feature['geometry']:
-                if feature['geometry']['type'] == 'Point':
-                    coords = feature['geometry']['coordinates']
-                    lon, lat = coords[0], coords[1]
-            
-            if not lat or not lon:
-                logger.warning(f"Bus {bus_id} missing coordinates, skipping")
-                continue
-            
+            # Missing is distinct from zero. ArcGIS x/y is WGS84 only when
+            # requested with outSR=4326; explicit unsupported CRS is rejected.
+            geometry = feature.get('geometry') or {}
+            if lat is None or lon is None:
+                wkid = geometry.get('spatialReference', {}).get('wkid', 4326)
+                if wkid != 4326:
+                    raise ValueError('Unsupported point spatial reference')
+                if geometry.get('type') == 'Point':
+                    lon, lat = geometry['coordinates'][:2]
+                elif 'x' in geometry and 'y' in geometry:
+                    lon, lat = geometry['x'], geometry['y']
+            if isinstance(lat, bool) or isinstance(lon, bool):
+                raise ValueError('Boolean coordinates are invalid')
+            lat, lon = float(lat), float(lon)
+            if not (math.isfinite(lat) and math.isfinite(lon)
+                    and -90 <= lat <= 90 and -180 <= lon <= 180):
+                raise ValueError('Coordinates must be finite WGS84 latitude/longitude')
+
             # Create document with the field structure from your API
             doc = {
                 "geometry": {
