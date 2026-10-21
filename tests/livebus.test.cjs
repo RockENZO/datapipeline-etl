@@ -19,6 +19,7 @@ assert.deepEqual(buses.map(b => b.id), ['b1', '0', 'b5', 'b7']);
 assert.equal(buses[0].route, '333');
 assert.equal(buses[0].speed, 40);
 assert.equal(buses[0].label, 'Bus 7');
+assert.equal(L.parseBuses({ features: [{ attributes: attrs('x', 1, 2, { 'vehicle.vehicle.id': ' v9 ' }) }] })[0].vid, 'v9');
 assert.equal(L.parseBuses({ features: [{ attributes: attrs('t', 1, 2, { 'vehicle.timestamp.low': 1760000000 }) }] })[0].ts, 1760000000);
 assert.deepEqual([buses[2].lat, buses[2].lon], [-33.9, 151.3]);
 assert.deepEqual(L.parseBuses(null), []);

@@ -32,6 +32,7 @@
             if (typeof lat !== 'number' || typeof lon !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) continue;
             buses.push({
                 id: String(id).trim(), lat, lon,
+                vid: String(p['vehicle.vehicle.id'] ?? '').trim(),   // fallback identities in case `id` is not stable between refreshes
                 route: p['vehicle.trip.routeId'] || '', trip: p['vehicle.trip.tripId'] || '',
                 label: p['vehicle.vehicle.label'] || '', plate: p['vehicle.vehicle.licensePlate'] || '',
                 ts: Number(p['vehicle.timestamp.low']) || 0,   // GTFS-realtime position time, epoch seconds

@@ -4,6 +4,7 @@
 // Env: TILES=off          skip OpenStreetMap tiles (use when the network blocks them)
 //      LEAFLET_DIR=path   serve Leaflet from a local dist/ folder instead of unpkg
 //      CHROMIUM=path      use an existing Chromium binary
+//      BUSES=off          leave the live bus layer out of the recording (default: included, needs network)
 import { chromium } from 'playwright';
 import http from 'node:http';
 import fs from 'node:fs';
@@ -41,10 +42,14 @@ let capturing = true, frames = 0;
 const started = Date.now();
 const capture = (async () => {
     while (capturing) {
-        await page.screenshot({ path: path.join(work, String(frames++).padStart(5, '0') + '.jpg'), type: 'jpeg', quality: 80 });
+        // The first shots can run before the page has navigated, and newer Playwright/Node combinations reject those: skip the frame.
+        try { await page.screenshot({ path: path.join(work, String(frames).padStart(5, '0') + '.jpg'), type: 'jpeg', quality: 80 }); frames++; }
+        catch { await new Promise(r => setTimeout(r, 100)); }
     }
 })();
-const q = process.env.TILES === 'off' ? '?tiles=off&buses=off' : '?buses=off';   // keep the live feed out of the recording so it stays repeatable
+// BUSES=off keeps the live feed out (offline machines, repeatable shots); otherwise the recording includes it and needs network.
+const buses = process.env.BUSES !== 'off';
+const q = '?' + [process.env.TILES === 'off' && 'tiles=off', buses ? 'livems=5000' : 'buses=off'].filter(Boolean).join('&');
 await page.goto(`http://localhost:${port}/${q}`);
 await page.waitForFunction(() => document.querySelector('[data-stage="query"]').classList.contains('done'), null, { timeout: 30000 });
 if (process.env.TILES !== 'off') await page.waitForSelector('.leaflet-tile-loaded', { timeout: 30000 });  // fail loudly instead of recording a blank map
@@ -69,6 +74,15 @@ await type('library');                               // libraries have no coordi
 await page.waitForTimeout(2400);
 await page.click('#clearBtn');
 await page.waitForTimeout(800);
+if (buses) {                                   // live buses: open one and let a refresh pass; the popup must stay open
+    await page.waitForSelector('.layer[data-live="live"], .layer[data-live="old"]', { timeout: 30000 });   // fail loudly if the feed is unreachable
+    await page.waitForTimeout(1200);
+    if (!(await page.evaluate(() => window.__demo.openBus()))) throw new Error('no live bus in view to open');
+    await page.waitForTimeout(7000);
+    if (!(await page.evaluate(() => !!document.querySelector('.leaflet-popup')))) throw new Error('live bus popup closed on refresh');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(600);
+}
 await page.click('#runBtn');                   // replay the pipeline
 await page.waitForFunction(() => document.querySelector('[data-stage="query"]').classList.contains('done'), null, { timeout: 30000 });
 await page.waitForTimeout(1500);
