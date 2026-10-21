@@ -326,7 +326,7 @@ def index_dataset(index_name, file_path, id_field=None, data_path=None):
             # Bulk index
             helpers.bulk(es, actions, chunk_size=1000, refresh="wait_for")
             logger.info(f"Successfully indexed {len(actions)} documents to {index_name}")
-        elif index_name in NON_SPATIAL_DATASETS and features and all(not f.get('geometry') for f in features):
+        elif index_name in NON_SPATIAL_DATASETS and features and all(f.get('geometry') is None for f in features):
             logger.warning(f"{index_name}: source records have no geometry; nothing to index on the map")
         else:
             raise ValueError(f"No valid documents found for {index_name}")
