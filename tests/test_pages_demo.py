@@ -68,6 +68,17 @@ class IndexerRealDataTests(unittest.TestCase):
         table = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": None, "properties": {"Name": "x"}}]}
         self.assertFalse(self._index("library_details", table).called)
 
+    def test_non_spatial_exemption_needs_real_geometry_free_records(self):
+        empty = {"type": "FeatureCollection", "features": []}
+        with self.assertRaises(ValueError):
+            self._index("library_details", empty)
+        broken = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Point", "coordinates": []}, "properties": {}}]}
+        with self.assertRaises(ValueError):
+            self._index("library_details", broken)
+        falsy = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {}, "properties": {}}]}
+        with self.assertRaises(ValueError):
+            self._index("library_details", falsy)
+
     def test_spatial_dataset_with_no_usable_geometry_is_still_fatal(self):
         table = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": None, "properties": {"Name": "x"}}]}
         with self.assertRaises(ValueError):

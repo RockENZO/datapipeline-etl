@@ -10,58 +10,55 @@
     
     <!-- Custom CSS -->
     <style>
-        :root {
-            --navy: #0d1b33; --navy-2: #13264a; --navy-3: #1b3260; --line: #27406e;
-            --text: #e6ecf7; --muted: #8fa3c7; --lav: #a78bfa; --orange: #ff9f43;
-        }
+        :root { color-scheme: light dark; --bg: #f5f5f7; --glass: rgba(255,255,255,.72); --solid: #fff; --line: rgba(60,60,67,.14); --fill: rgba(120,120,128,.12); --text: #1d1d1f; --text-2: #6e6e73; --accent: #007aff; --shadow: 0 10px 34px rgba(0,0,0,.14), 0 1px 3px rgba(0,0,0,.08); }
+        @media (prefers-color-scheme: dark) { :root { --bg: #000; --glass: rgba(28,28,30,.72); --solid: #1c1c1e; --line: rgba(235,235,245,.14); --fill: rgba(120,120,128,.28); --text: #f5f5f7; --text-2: #a1a1a6; --accent: #0a84ff; --shadow: 0 10px 34px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.4); } .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.88) saturate(.7); } }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--navy); color: var(--text); display: flex; flex-direction: column; }
-        .header { background: linear-gradient(135deg, var(--navy-2), var(--navy)); border-bottom: 1px solid var(--line); padding: .75rem 1.25rem; }
-        .header h1 { font-size: 1.15rem; font-weight: 600; }
-        .controls { background: var(--navy-2); border-bottom: 1px solid var(--line); padding: .75rem 1rem; display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
-        .search-container { display: flex; gap: .5rem; align-items: center; flex: 1; min-width: 300px; flex-wrap: wrap; }
-        .dataset-selector, .search-input { background: var(--navy); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: .55rem .7rem; font-size: .9rem; }
+        body { font: 14px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+        .header { padding: 14px 20px 4px; }
+        .header h1 { font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+        .controls { padding: 8px 16px 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .search-container { display: flex; gap: 8px; align-items: center; flex: 1; min-width: 280px; flex-wrap: wrap; }
+        .dataset-selector, .search-input { background: var(--solid); color: var(--text); border: .5px solid var(--line); border-radius: 12px; padding: 0 12px; height: 40px; font: inherit; font-size: 15px; }
         .dataset-selector { min-width: 190px; }
         .search-input { flex: 1; min-width: 180px; }
-        .search-input:focus, .dataset-selector:focus { outline: 2px solid var(--lav); }
-        .search-btn, .clear-btn, .toggle-btn { padding: .55rem 1rem; border: 0; border-radius: 8px; font-size: .85rem; font-weight: 600; cursor: pointer; }
-        .search-btn { background: var(--lav); color: #140f2b; }
-        .clear-btn, .toggle-btn { background: transparent; color: var(--text); border: 1px solid var(--line); }
-        .search-btn:hover, .clear-btn:hover, .toggle-btn:hover { filter: brightness(1.15); }
+        .search-input:focus, .dataset-selector:focus { outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+        .search-btn, .clear-btn, .toggle-btn { height: 40px; padding: 0 16px; border: 0; border-radius: 12px; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+        .search-btn { background: var(--accent); color: #fff; }
+        .clear-btn, .toggle-btn { background: var(--fill); color: var(--text); }
+        .search-btn:hover, .clear-btn:hover, .toggle-btn:hover { filter: brightness(.95); }
         .toggle-btn.inactive { opacity: .6; }
-        .stats { color: var(--muted); font-size: .82rem; white-space: nowrap; }
-        .map-container { position: relative; flex: 1; min-height: 320px; }
-        #map { height: 100%; width: 100%; background: #0f1f3d; }
-        .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.6); }
-        .leaflet-container { font-family: inherit; }
-        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--navy-2); color: var(--text); border: 1px solid var(--line); }
-        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,27,51,.92); border: 1px solid var(--line); padding: 1.25rem 2rem; border-radius: 10px; z-index: 1000; display: none; }
+        .stats { color: var(--text-2); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .map-container { position: relative; flex: 1; min-height: 320px; margin: 0 12px 12px; border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); border: .5px solid var(--line); }
+        #map { height: 100%; width: 100%; background: #e8e8ed; }
+        .leaflet-container { font: inherit; }
+        .leaflet-bar { border: 0 !important; border-radius: 12px !important; overflow: hidden; box-shadow: var(--shadow) !important; }
+        .leaflet-bar a { background: var(--glass) !important; color: var(--text) !important; border-bottom: 1px solid var(--line) !important; backdrop-filter: blur(24px); }
+        .leaflet-popup-content-wrapper { background: var(--glass); backdrop-filter: blur(24px) saturate(180%); color: var(--text); border: .5px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+        .leaflet-popup-tip { background: var(--solid); box-shadow: none; }
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--glass); backdrop-filter: blur(24px); border: .5px solid var(--line); padding: 14px 22px; border-radius: 14px; z-index: 1000; display: none; box-shadow: var(--shadow); }
         .popup-content { max-width: 300px; }
-        .popup-title { font-weight: 600; margin-bottom: .35rem; font-size: 1rem; }
-        .popup-info { color: #c8d4ee; font-size: .82rem; line-height: 1.45; }
-        .popup-info div { margin-bottom: .2rem; }
-        .popup-info strong { color: var(--muted); }
+        .popup-title { font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+        .popup-info { color: var(--text-2); font-size: 12.5px; line-height: 1.45; }
+        .popup-info div { margin-bottom: 2px; }
+        .popup-info strong { color: var(--text); font-weight: 500; }
         .bus-marker { filter: drop-shadow(1px 1px 3px rgba(0,0,0,.4)); z-index: 1000; background: none !important; border: none !important; }
         .bus-marker:hover { transform: scale(1.1); transition: transform .2s ease; }
         .bus-marker .leaflet-marker-icon { background: none !important; border: none !important; box-shadow: none !important; }
-        .dataset-legend { position: absolute; top: 10px; right: 10px; background: rgba(13,27,51,.92); border: 1px solid var(--line); padding: .7rem .8rem; border-radius: 10px; z-index: 1000; min-width: 210px; max-height: calc(100% - 20px); overflow-y: auto; }
-        .dataset-legend h4 { margin-bottom: .4rem; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
-        .legend-item { display: flex; align-items: center; margin-bottom: .2rem; font-size: .78rem; cursor: pointer; padding: .2rem .25rem; border-radius: 6px; }
-        .legend-item:hover { background: var(--navy-3); }
+        .dataset-legend { position: absolute; top: 12px; right: 12px; background: var(--glass); backdrop-filter: blur(24px) saturate(180%); border: .5px solid var(--line); padding: 10px 12px; border-radius: 16px; z-index: 1000; min-width: 210px; max-height: calc(100% - 24px); overflow-y: auto; box-shadow: var(--shadow); }
+        .dataset-legend h4 { margin-bottom: 6px; color: var(--text-2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 2px; font-size: 13px; cursor: pointer; padding: 4px 6px; border-radius: 8px; }
+        .legend-item:hover { background: var(--fill); }
         .legend-item.inactive { opacity: .4; }
-        .legend-color { width: 12px; height: 12px; border-radius: 50%; margin-right: .5rem; border: 2px solid #fff; flex: none; }
+        .legend-color { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; flex: none; }
         .legend-polygon { border-radius: 3px; }
-        .legend-count { margin-left: auto; color: var(--orange); font-weight: 700; }
-        @media (max-width: 800px) {
-            .dataset-legend { position: static; margin: .5rem; }
-            .map-container { min-height: 520px; }
-        }
+        .legend-count { margin-left: auto; color: var(--text-2); font-variant-numeric: tabular-nums; font-size: 12px; }
+        @media (max-width: 800px) { .dataset-legend { position: static; margin: 8px; } .map-container { min-height: 520px; } }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🗺️ Sydney Multi-Dataset Interactive Map</h1>
+        <h1>Sydney Multi-Dataset Map</h1>
     </div>
     
     <div class="controls">
@@ -73,7 +70,7 @@
                 {% endfor %}
             </select>
             <input type="text" class="search-input" id="searchInput" placeholder="Search locations, names, addresses...">
-            <button class="search-btn" id="searchBtn">🔍 Search</button>
+            <button class="search-btn" id="searchBtn">Search</button>
             <button class="clear-btn" id="clearBtn">Clear</button>
         </div>
         <button class="toggle-btn" id="toggleAllBtn">Hide All</button>
@@ -87,7 +84,7 @@
         </div>
         
         <div class="dataset-legend" id="legend">
-            <h4>📊 Dataset Layers</h4>
+            <h4>Dataset layers</h4>
             <div id="legendItems"></div>
         </div>
     </div>

@@ -47,23 +47,26 @@ const capture = (async () => {
 const q = process.env.TILES === 'off' ? '?tiles=off' : '';
 await page.goto(`http://localhost:${port}/${q}`);
 await page.waitForFunction(() => document.querySelector('[data-stage="query"]').classList.contains('done'), null, { timeout: 30000 });
+if (process.env.TILES !== 'off') await page.waitForSelector('.leaflet-tile-loaded', { timeout: 30000 });  // fail loudly instead of recording a blank map
 await page.waitForTimeout(1500);
 
 const type = async text => { await page.fill('#searchInput', ''); await page.type('#searchInput', text, { delay: 90 }); await page.press('#searchInput', 'Enter'); };
+const pill = name => page.getByRole('button', { name: new RegExp('^' + name) });
 await page.click('#chips button:nth-of-type(1)');   // Redfern
 await page.waitForTimeout(1800);
 await page.evaluate(() => window.__demo.openFirst('stairs'));
-await page.waitForTimeout(2200);
+await page.waitForTimeout(2400);
 await type('King Street');
 await page.waitForTimeout(2000);
 await type('hospital');
 await page.waitForTimeout(1800);
-await page.fill('#searchInput', '');
-await page.selectOption('#datasetSelector', 'nsw_ambulance_stations');
+await page.click('#clearBtn');
+await pill('All').click();                           // hide every layer...
+await pill('Ambulance').click();                     // ...then show just one
 await page.waitForTimeout(1800);
-await page.selectOption('#datasetSelector', '');
-await type('library');                               // libraries have no coordinates: listed as table-only records
-await page.waitForTimeout(2200);
+await pill('All').click();
+await type('library');                               // libraries have no coordinates: listed under "Not on the map"
+await page.waitForTimeout(2400);
 await page.click('#clearBtn');
 await page.waitForTimeout(800);
 await page.click('#runBtn');                   // replay the pipeline

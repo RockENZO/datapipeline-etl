@@ -235,7 +235,8 @@ index_mappings = {
 }
 
 # Council exports whose records carry no coordinates (library opening hours, a recovery-rate time
-# series). They are legitimately empty on a map, so they must not abort startup.
+# series). They are legitimately empty on a map, so they must not abort startup, but only while
+# the file really holds records and none of them has a (possibly malformed) geometry.
 NON_SPATIAL_DATASETS = {'library_details', 'residential_waste_recovery'}
 
 def process_geometry(geometry):
@@ -325,7 +326,7 @@ def index_dataset(index_name, file_path, id_field=None, data_path=None):
             # Bulk index
             helpers.bulk(es, actions, chunk_size=1000, refresh="wait_for")
             logger.info(f"Successfully indexed {len(actions)} documents to {index_name}")
-        elif index_name in NON_SPATIAL_DATASETS:
+        elif index_name in NON_SPATIAL_DATASETS and features and all(f.get('geometry') is None for f in features):
             logger.warning(f"{index_name}: source records have no geometry; nothing to index on the map")
         else:
             raise ValueError(f"No valid documents found for {index_name}")
