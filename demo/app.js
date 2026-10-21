@@ -34,7 +34,7 @@
 
     // Live buses: polled straight from Spatial NSW in the browser (see livebus.js). No backend, so it only
     // works while the feed answers cross-origin requests; otherwise the pill says so and the rest still works.
-    const LIVE_MS = 30000, LIVE_COLOR = '#5e5ce6';
+    const LIVE_MS = Number(params.get('livems')) || 30000, LIVE_COLOR = '#5e5ce6';
     const busesOn = params.get('buses') !== 'off';
     const busLayer = L.layerGroup();
     if (busesOn) busLayer.addTo(map);
@@ -386,7 +386,9 @@
         if (layer) layer.openPopup();
     }
 
-    window.__demo = { search, runPipeline, map, openFirst, pollBuses };
+    function openBus() { const e = [...busEntries][0]; if (e) e.m.openPopup(); }
+
+    window.__demo = { search, runPipeline, map, openFirst, pollBuses, openBus };
     drawLegend();
     runPipeline();
     startBuses();

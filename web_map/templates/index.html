@@ -248,6 +248,65 @@
             });
         }
         
+        // Live buses are updated in place so an open popup survives a refresh and buses glide instead of jumping.
+        // Records are matched to existing markers by bus id, then vehicle id, then trip, in case the feed relabels a bus.
+        const liveBusEntries = new Set();   // { marker, props, missed, anim }
+
+        function glideMarker(entry, lat, lon) {
+            cancelAnimationFrame(entry.anim);
+            const from = entry.marker.getLatLng(), t0 = performance.now(), duration = 1200;
+            if (from.lat === lat && from.lng === lon) return;
+            const step = now => {
+                const k = Math.min(1, (now - t0) / duration), e = 1 - Math.pow(1 - k, 3);
+                entry.marker.setLatLng([from.lat + (lat - from.lat) * e, from.lng + (lon - from.lng) * e]);
+                if (k < 1) entry.anim = requestAnimationFrame(step);
+            };
+            entry.anim = requestAnimationFrame(step);
+        }
+
+        function updateLiveBuses(layer, features, dataset) {
+            // Search and Hide All clear the layer behind our back, and a search can also draw buses of its own:
+            // forget entries whose marker is gone and drop markers this function does not own.
+            const owned = new Set([...liveBusEntries].map(e => e.marker));
+            liveBusEntries.forEach(e => { if (!layer.hasLayer(e.marker)) liveBusEntries.delete(e); });
+            layer.eachLayer(l => { if (!owned.has(l)) layer.removeLayer(l); });
+            const keys = [p => p.bus_id, p => p.vehicle_id, p => p.trip_id && p.route_id && `${p.trip_id}|${p.route_id}`];
+            const index = keys.map(key => new Map([...liveBusEntries].map(e => [key(e.props), e]).filter(([k]) => k)));
+            const claimed = new Set();
+            features.forEach(feature => {
+                const props = feature.properties || {};
+                let entry = null;
+                keys.forEach((key, i) => {
+                    const k = key(props), candidate = !entry && k ? index[i].get(k) : null;
+                    if (candidate && !claimed.has(candidate)) entry = candidate;
+                });
+                if (entry) {
+                    claimed.add(entry);
+                    entry.missed = 0;
+                    entry.props = props;
+                    entry.marker.setOpacity(1);
+                    glideMarker(entry, feature.geometry.lat, feature.geometry.lon);
+                    const html = createLivePopupContent(feature, dataset);
+                    if (html !== entry.html) { entry.html = html; entry.marker.setPopupContent(html); }
+                } else {
+                    const marker = createLiveMarker(feature, dataset);
+                    if (!marker) return;
+                    const html = createLivePopupContent(feature, dataset);
+                    marker.bindPopup(html);
+                    entry = { marker, props, missed: 0, html, anim: 0 };
+                    claimed.add(entry);
+                    liveBusEntries.add(entry);
+                    layer.addLayer(marker);
+                }
+            });
+            // A bus that misses a refresh or two is dimmed rather than removed from under the user.
+            [...liveBusEntries].forEach(entry => {
+                if (claimed.has(entry)) return;
+                if (++entry.missed > 3) { cancelAnimationFrame(entry.anim); layer.removeLayer(entry.marker); liveBusEntries.delete(entry); }
+                else entry.marker.setOpacity(0.45);
+            });
+        }
+
         // Load live data for a specific dataset
         async function loadLiveData(datasetKey) {
             try {
@@ -262,17 +321,21 @@
                     const dataset = result.dataset;
                     const layer = datasetLayers[datasetKey];
                     
-                    // Clear existing live data for this dataset
-                    layer.clearLayers();
-                    
-                    result.data.features.forEach(feature => {
-                        const marker = createLiveMarker(feature, dataset);
-                        if (marker) {
-                            marker.bindPopup(createLivePopupContent(feature, dataset));
-                            layer.addLayer(marker);
-                        }
-                    });
-                    
+                    if (dataset.name === 'Live Buses') {
+                        updateLiveBuses(layer, result.data.features, dataset);
+                    } else {
+                        // Clear existing live data for this dataset
+                        layer.clearLayers();
+
+                        result.data.features.forEach(feature => {
+                            const marker = createLiveMarker(feature, dataset);
+                            if (marker) {
+                                marker.bindPopup(createLivePopupContent(feature, dataset));
+                                layer.addLayer(marker);
+                            }
+                        });
+                    }
+
                     datasetCounts[datasetKey] = result.data.features.length;
                     updateLegend();
                 }
