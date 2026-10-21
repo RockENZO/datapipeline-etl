@@ -17,7 +17,8 @@
         const features = data && (data.features || data.records) || (Array.isArray(data) ? data : []);
         const buses = [];
         for (const f of features) {
-            const p = f && (f.properties || f.attributes || f) || {};
+            if (!f || typeof f !== 'object') continue;
+            const p = f.properties || f.attributes || f;
             const id = ['id', 'vehicle.vehicle.id', 'hashId'].map(k => p[k]).find(v => (typeof v === 'string' || typeof v === 'number') && String(v).trim());
             if (id === undefined) continue;
             const g = f.geometry || {};
@@ -47,7 +48,12 @@
                 const res = await fetchFn(url, { signal });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
-                if (data && (data.features || data.records)) return parseBuses(data);
+                if (data && (data.features || data.records)) {
+                    const buses = parseBuses(data), sent = (data.features || data.records).length;
+                    // Records came back but none were usable (schema change, wrong CRS): a failed refresh, not an empty feed.
+                    if (sent && !buses.length) throw new Error('no usable bus records');
+                    return buses;
+                }
                 throw new Error(data && data.error && data.error.message || 'unexpected response');
             } catch (e) { last = e; }
         }

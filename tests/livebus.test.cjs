@@ -21,6 +21,7 @@ assert.equal(buses[0].speed, 40);
 assert.equal(buses[0].label, 'Bus 7');
 assert.deepEqual([buses[2].lat, buses[2].lon], [-33.9, 151.3]);
 assert.deepEqual(L.parseBuses(null), []);
+assert.deepEqual(L.parseBuses({ features: [null, 7, { attributes: attrs('ok', 1, 2) }] }).map(b => b.id), ['ok']);   // bad entries skipped one by one
 
 (async () => {
     const calls = [];
@@ -29,5 +30,8 @@ assert.deepEqual(L.parseBuses(null), []);
     assert.equal(calls.length, 2, 'falls back to the geojson endpoint');
     await assert.rejects(L.fetchBuses(async () => { throw new TypeError('Failed to fetch'); }), /Failed to fetch/);
     await assert.rejects(L.fetchBuses(async () => ({ ok: true, json: async () => ({ error: { message: 'Invalid query' } }) })), /Invalid query/);
+    // An empty feed is fine; a non-empty feed with nothing usable is a failed refresh.
+    assert.deepEqual(await L.fetchBuses(async () => ({ ok: true, json: async () => ({ features: [] }) })), []);
+    await assert.rejects(L.fetchBuses(async () => ({ ok: true, json: async () => ({ features: [{ attributes: { id: 'z' } }] }) })), /no usable/);
     console.log('livebus ok');
 })();

@@ -35,7 +35,9 @@
     // Live buses: polled straight from Spatial NSW in the browser (see livebus.js). No backend, so it only
     // works while the feed answers cross-origin requests; otherwise the pill says so and the rest still works.
     const LIVE_MS = 30000, LIVE_COLOR = '#5e5ce6';
-    const busLayer = L.layerGroup().addTo(map);
+    const busesOn = params.get('buses') !== 'off';
+    const busLayer = L.layerGroup();
+    if (busesOn) busLayer.addTo(map);
     const busMarkers = new Map();
     const live = { state: 'connecting', count: 0, updated: null, timer: null, busy: false };
 
@@ -72,9 +74,10 @@
         } catch (e) {
             // Keep the last snapshot visible if we had one; only a first-ever failure marks the feed unavailable.
             live.state = live.updated ? 'stale' : 'offline';
-        } finally { clearTimeout(timeout); live.busy = false; drawLegend(); }
+        } finally { clearTimeout(timeout); live.busy = false; updateLivePill(); }
     }
     function startBuses() {
+        if (!busesOn) return;
         pollBuses();
         live.timer = setInterval(pollBuses, LIVE_MS);
         document.addEventListener('visibilitychange', () => { if (!document.hidden) pollBuses(); });
@@ -260,10 +263,26 @@
     const LIVE_LABEL = { connecting: 'Live buses · connecting', live: 'Live buses', empty: 'Live buses · none now', stale: 'Live buses · paused', offline: 'Live buses · unavailable' };
     const SHORT = { building_complex_points: 'Buildings', stairs: 'Stairs', recreation_centres: 'Recreation', information_kiosks: 'Kiosks', nsw_ambulance_stations: 'Ambulance', business_rate_category: 'Business rates', free_15_minute_parking: 'Free parking', ticket_parking_rates: 'Ticket parking' };
 
+    // The live pill changes every poll, so it is updated in place rather than rebuilding the dock (which would drop keyboard focus).
+    let livePill = null;
+    function updateLivePill() {
+        if (!livePill) return;
+        const on = map.hasLayer(busLayer) && live.state !== 'offline';
+        livePill.classList.toggle('off', !on);
+        livePill.setAttribute('aria-pressed', String(on));
+        livePill.dataset.live = live.state;
+        let n = livePill.querySelector('.n');
+        if (live.state === 'live') {
+            if (!n) { n = document.createElement('span'); n.className = 'n'; livePill.append(n); }
+            n.textContent = live.count.toLocaleString();
+        } else if (n) n.remove();
+        livePill.firstChild.nextSibling.textContent = LIVE_LABEL[live.state];
+    }
+
     function drawLegend() {
         els.legend.innerHTML = '';
         const entries = Object.entries(P.DATASETS).filter(([, cfg]) => !cfg.nonSpatial);   // table-only datasets have no layer
-        const allOn = entries.every(([key]) => map.hasLayer(layers[key]));
+        const allOn = entries.every(([key]) => map.hasLayer(layers[key])) && (!busesOn || map.hasLayer(busLayer));
         const make = (label, on, dotColor, poly, n, toggle) => {
             const b = document.createElement('button');
             b.type = 'button';
@@ -287,6 +306,7 @@
         };
         make('All', allOn, null, false, null, () => {
             entries.forEach(([key]) => (allOn ? map.removeLayer(layers[key]) : map.addLayer(layers[key])));
+            if (busesOn) { if (allOn) map.removeLayer(busLayer); else { map.addLayer(busLayer); pollBuses(); } }
             drawLegend();
         });
         entries.forEach(([key, cfg]) => {
@@ -295,11 +315,14 @@
                 drawLegend();
             });
         });
-        make(LIVE_LABEL[live.state], map.hasLayer(busLayer) && live.state !== 'offline', LIVE_COLOR, false, live.state === 'live' ? live.count : null, () => {
-            if (map.hasLayer(busLayer)) map.removeLayer(busLayer); else { map.addLayer(busLayer); pollBuses(); }
-            drawLegend();
-        });
-        els.legend.lastChild.dataset.live = live.state;
+        if (busesOn) {
+            make('', true, LIVE_COLOR, false, null, () => {
+                if (map.hasLayer(busLayer)) map.removeLayer(busLayer); else { map.addLayer(busLayer); pollBuses(); }
+                drawLegend();
+            });
+            livePill = els.legend.lastChild;
+            updateLivePill();
+        }
     }
 
     els.form.addEventListener('submit', e => { e.preventDefault(); search({ fit: true }); els.input.blur(); });
@@ -335,5 +358,5 @@
     window.__demo = { search, runPipeline, map, openFirst, pollBuses };
     drawLegend();
     runPipeline();
-    if (params.get('buses') !== 'off') startBuses();
+    startBuses();
 })();
