@@ -23,6 +23,7 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/pipeline.test.cjs
+      - run: node tests/livebus.test.cjs
       - run: tools/build_pages.sh _site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

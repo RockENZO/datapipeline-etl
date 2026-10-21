@@ -15,6 +15,13 @@ class StaticDemoTests(unittest.TestCase):
                                 text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_live_bus_parser_follows_the_indexer_rules(self):
+        node = shutil.which("node")
+        self.assertIsNotNone(node, "Node.js is required for the static demo checks")
+        result = subprocess.run([node, str(Path(__file__).with_name("livebus.test.cjs"))],
+                                text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_demo_data_matches_what_the_indexer_reads(self):
         import importlib.util
         spec = importlib.util.spec_from_file_location("build_demo_data", ROOT / "tools/build_demo_data.py")

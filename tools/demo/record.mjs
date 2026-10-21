@@ -44,7 +44,7 @@ const capture = (async () => {
         await page.screenshot({ path: path.join(work, String(frames++).padStart(5, '0') + '.jpg'), type: 'jpeg', quality: 80 });
     }
 })();
-const q = process.env.TILES === 'off' ? '?tiles=off' : '';
+const q = process.env.TILES === 'off' ? '?tiles=off&buses=off' : '?buses=off';   // keep the live feed out of the recording so it stays repeatable
 await page.goto(`http://localhost:${port}/${q}`);
 await page.waitForFunction(() => document.querySelector('[data-stage="query"]').classList.contains('done'), null, { timeout: 30000 });
 if (process.env.TILES !== 'off') await page.waitForSelector('.leaflet-tile-loaded', { timeout: 30000 });  // fail loudly instead of recording a blank map
