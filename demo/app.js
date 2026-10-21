@@ -39,10 +39,10 @@
     const busLayer = L.layerGroup();
     if (busesOn) busLayer.addTo(map);
     const busMarkers = new Map();
-    const live = { state: 'connecting', count: 0, updated: null, timer: null, busy: false };
+    const live = { state: 'connecting', count: 0, updated: null, newest: 0, timer: null, busy: false };
 
     function busPopup(b) {
-        const rows = [['Route', b.route], ['Vehicle', b.label || b.plate], ['Speed', b.speed ? b.speed + ' km/h' : ''], ['Updated', live.updated ? live.updated.toLocaleTimeString() : '']]
+        const rows = [['Route', b.route], ['Vehicle', b.label || b.plate], ['Speed', b.speed ? b.speed + ' km/h' : ''], ['Position time', b.ts ? new Date(b.ts * 1000).toLocaleTimeString() : '']]
             .filter(([, v]) => v).map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd>`).join('');
         return `<div class="popup-kicker" style="color:${LIVE_COLOR}">Live bus</div><div class="popup-title">${escapeHtml(b.route ? 'Route ' + b.route : 'Bus ' + b.id)}</div><dl class="popup-info">${rows}</dl>`;
     }
@@ -69,7 +69,9 @@
             const buses = await window.LiveBus.fetchBuses(fetch, ctl.signal);
             live.updated = new Date();
             live.count = buses.length;
-            live.state = buses.length ? 'live' : 'empty';
+            live.newest = Math.max(0, ...buses.map(b => b.ts));
+            const age = live.newest ? Date.now() / 1000 - live.newest : 0;
+            live.state = !buses.length ? 'empty' : age > 180 ? 'old' : 'live';
             showBuses(buses);
         } catch (e) {
             // Keep the last snapshot visible if we had one; only a first-ever failure marks the feed unavailable.
@@ -260,7 +262,7 @@
         }
     }
 
-    const LIVE_LABEL = { connecting: 'Live buses · connecting', live: 'Live buses', empty: 'Live buses · none now', stale: 'Live buses · paused', offline: 'Live buses · unavailable' };
+    const LIVE_LABEL = { connecting: 'Live buses · connecting', live: 'Live buses', empty: 'Live buses · none now', old: 'Live buses · feed not updating', stale: 'Live buses · paused', offline: 'Live buses · unavailable' };
     const SHORT = { building_complex_points: 'Buildings', stairs: 'Stairs', recreation_centres: 'Recreation', information_kiosks: 'Kiosks', nsw_ambulance_stations: 'Ambulance', business_rate_category: 'Business rates', free_15_minute_parking: 'Free parking', ticket_parking_rates: 'Ticket parking' };
 
     // The live pill changes every poll, so it is updated in place rather than rebuilding the dock (which would drop keyboard focus).
@@ -272,11 +274,12 @@
         livePill.setAttribute('aria-pressed', String(on));
         livePill.dataset.live = live.state;
         let n = livePill.querySelector('.n');
-        if (live.state === 'live') {
+        if (live.state === 'live' || live.state === 'old') {
             if (!n) { n = document.createElement('span'); n.className = 'n'; livePill.append(n); }
             n.textContent = live.count.toLocaleString();
         } else if (n) n.remove();
         livePill.firstChild.nextSibling.textContent = LIVE_LABEL[live.state];
+        livePill.title = live.updated ? `Fetched ${live.updated.toLocaleTimeString()}` + (live.newest ? `; newest bus position ${new Date(live.newest * 1000).toLocaleTimeString()}` : '') : '';
     }
 
     function drawLegend() {

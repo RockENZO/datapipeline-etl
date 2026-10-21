@@ -19,6 +19,7 @@ assert.deepEqual(buses.map(b => b.id), ['b1', '0', 'b5', 'b7']);
 assert.equal(buses[0].route, '333');
 assert.equal(buses[0].speed, 40);
 assert.equal(buses[0].label, 'Bus 7');
+assert.equal(L.parseBuses({ features: [{ attributes: attrs('t', 1, 2, { 'vehicle.timestamp.low': 1760000000 }) }] })[0].ts, 1760000000);
 assert.deepEqual([buses[2].lat, buses[2].lon], [-33.9, 151.3]);
 assert.deepEqual(L.parseBuses(null), []);
 assert.deepEqual(L.parseBuses({ features: [null, 7, { attributes: attrs('ok', 1, 2) }] }).map(b => b.id), ['ok']);   // bad entries skipped one by one
@@ -30,6 +31,12 @@ assert.deepEqual(L.parseBuses({ features: [null, 7, { attributes: attrs('ok', 1,
     assert.equal(calls.length, 2, 'falls back to the geojson endpoint');
     await assert.rejects(L.fetchBuses(async () => { throw new TypeError('Failed to fetch'); }), /Failed to fetch/);
     await assert.rejects(L.fetchBuses(async () => ({ ok: true, json: async () => ({ error: { message: 'Invalid query' } }) })), /Invalid query/);
+    const seen = [];
+    await L.fetchBuses(async url => { seen.push(url); return { ok: true, json: async () => feed }; }, undefined, 123);
+    assert(seen[0].endsWith('&_=123'), 'first request carries a cache-busting parameter');
+    const order = [];
+    await assert.rejects(L.fetchBuses(async url => { order.push(url); throw new TypeError('nope'); }, undefined, 9));
+    assert.deepEqual(order.map(u => u.includes('f=geojson') + ':' + u.endsWith('&_=9')), ['false:true', 'false:false', 'true:true', 'true:false'], 'each endpoint is tried cache-busted, then plain');
     // An empty feed is fine; a non-empty feed with nothing usable is a failed refresh.
     assert.deepEqual(await L.fetchBuses(async () => ({ ok: true, json: async () => ({ features: [] }) })), []);
     await assert.rejects(L.fetchBuses(async () => ({ ok: true, json: async () => ({ features: [{ attributes: { id: 'z' } }] }) })), /no usable/);
