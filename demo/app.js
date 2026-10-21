@@ -38,7 +38,7 @@
     const busesOn = params.get('buses') !== 'off';
     const busLayer = L.layerGroup();
     if (busesOn) busLayer.addTo(map);
-    const busMarkers = new Map();
+    const busEntries = new Set();   // { m: marker, b: last bus record, missed: polls it was absent, anim: frame id }
     const live = { state: 'connecting', count: 0, updated: null, newest: 0, timer: null, busy: false };
 
     function busPopup(b) {
@@ -47,18 +47,46 @@
         return `<div class="popup-kicker" style="color:${LIVE_COLOR}">Live bus</div><div class="popup-title">${escapeHtml(b.route ? 'Route ' + b.route : 'Bus ' + b.id)}</div><dl class="popup-info">${rows}</dl>`;
     }
 
+    // Glide a marker to its new position so a refresh reads as movement. The popup follows via the marker's move event.
+    function glide(entry, lat, lon) {
+        cancelAnimationFrame(entry.anim);
+        const from = entry.m.getLatLng(), t0 = performance.now(), DUR = 1200;
+        if (from.lat === lat && from.lng === lon) return;
+        const step = now => {
+            const k = Math.min(1, (now - t0) / DUR), e = 1 - Math.pow(1 - k, 3);
+            entry.m.setLatLng([from.lat + (lat - from.lat) * e, from.lng + (lon - from.lng) * e]);
+            if (k < 1) entry.anim = requestAnimationFrame(step);
+        };
+        entry.anim = requestAnimationFrame(step);
+    }
+
+    // Each new record is matched to an existing marker by id, then vehicle id, then trip, so a selected bus keeps its popup
+    // even if the feed re-labels it. A bus that misses a poll or two stays (dimmed) rather than vanishing under the user.
     function showBuses(buses) {
-        const seen = new Set();
+        const keys = [['id', b => b.id], ['vid', b => b.vid], ['trip', b => b.trip && b.route && b.trip + '|' + b.route]];
+        const index = keys.map(([, f]) => new Map([...busEntries].map(e => [f(e.b), e]).filter(([k]) => k)));
+        const claimed = new Set();
         for (const b of buses) {
-            seen.add(b.id);
-            let m = busMarkers.get(b.id);
-            if (m) { m.setLatLng([b.lat, b.lon]); m.setPopupContent(busPopup(b)); } else {
-                m = L.circleMarker([b.lat, b.lon], { pane: 'live', radius: 5, weight: 1.5, color: '#fff', fillColor: LIVE_COLOR, fillOpacity: 1 }).bindPopup(busPopup(b));
-                busMarkers.set(b.id, m);
+            let entry = null;
+            keys.forEach(([, f], i) => { const k = f(b); const e = !entry && k ? index[i].get(k) : null; if (e && !claimed.has(e)) entry = e; });
+            if (entry) {
+                claimed.add(entry); entry.missed = 0; entry.b = b;
+                entry.m.setStyle({ fillOpacity: 1 });
+                glide(entry, b.lat, b.lon);
+                const html = busPopup(b);
+                if (html !== entry.html) { entry.html = html; entry.m.setPopupContent(html); }
+            } else {
+                const m = L.circleMarker([b.lat, b.lon], { pane: 'live', radius: 5, weight: 1.5, color: '#fff', fillColor: LIVE_COLOR, fillOpacity: 1 }).bindPopup(busPopup(b));
+                entry = { m, b, missed: 0, html: busPopup(b), anim: 0 };
+                claimed.add(entry);
+                busEntries.add(entry);
                 busLayer.addLayer(m);
             }
         }
-        for (const [id, m] of busMarkers) if (!seen.has(id)) { busLayer.removeLayer(m); busMarkers.delete(id); }
+        for (const e of [...busEntries]) {
+            if (claimed.has(e)) continue;
+            if (++e.missed > 3) { cancelAnimationFrame(e.anim); busLayer.removeLayer(e.m); busEntries.delete(e); } else e.m.setStyle({ fillOpacity: .45 });
+        }
     }
 
     async function pollBuses() {
