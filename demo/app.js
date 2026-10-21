@@ -163,7 +163,6 @@
         if (fit) fitToHits(keys);
         const took = Math.max(1, Math.round(performance.now() - started));
         drawLegend();
-        total += tableRows.length;
         els.stats.textContent = `Showing ${total} items${tableRows.length ? ` (${tableRows.length} table-only)` : ''}${query ? ` for “${query}”` : ''}${capped ? ' · capped at 1000 per dataset' : ''}`;
         stage('query', 'done', `${total} hits in ${took} ms${query ? ` for “${query}”` : ''}`, 100);
         log(`query      ${query ? '"' + query + '"' : '(all)'} → ${total} hits, ${took} ms`);
