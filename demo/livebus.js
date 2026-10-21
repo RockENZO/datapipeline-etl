@@ -46,7 +46,7 @@
         let last;
         // A changing query string keeps the browser or a CDN from answering with an old copy; the plain URLs are the fallback.
         const bust = u => u + '&_=' + now;
-        for (const url of [bust(URLS[0]), ...URLS]) {
+        for (const url of URLS.flatMap(u => [bust(u), u])) {
             try {
                 const res = await fetchFn(url, { signal });
                 if (!res.ok) throw new Error('HTTP ' + res.status);

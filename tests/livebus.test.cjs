@@ -34,6 +34,9 @@ assert.deepEqual(L.parseBuses({ features: [null, 7, { attributes: attrs('ok', 1,
     const seen = [];
     await L.fetchBuses(async url => { seen.push(url); return { ok: true, json: async () => feed }; }, undefined, 123);
     assert(seen[0].endsWith('&_=123'), 'first request carries a cache-busting parameter');
+    const order = [];
+    await assert.rejects(L.fetchBuses(async url => { order.push(url); throw new TypeError('nope'); }, undefined, 9));
+    assert.deepEqual(order.map(u => u.includes('f=geojson') + ':' + u.endsWith('&_=9')), ['false:true', 'false:false', 'true:true', 'true:false'], 'each endpoint is tried cache-busted, then plain');
     // An empty feed is fine; a non-empty feed with nothing usable is a failed refresh.
     assert.deepEqual(await L.fetchBuses(async () => ({ ok: true, json: async () => ({ features: [] }) })), []);
     await assert.rejects(L.fetchBuses(async () => ({ ok: true, json: async () => ({ features: [{ attributes: { id: 'z' } }] }) })), /no usable/);
