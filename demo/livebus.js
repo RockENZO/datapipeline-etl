@@ -45,9 +45,11 @@
     // Returns the parsed buses, or throws if every endpoint failed (typically CORS or the feed being down).
     async function fetchBuses(fetchFn, signal, now = Date.now()) {
         let last;
-        // A changing query string keeps the browser or a CDN from answering with an old copy; the plain URLs are the fallback.
-        const bust = u => u + '&_=' + now;
-        for (const url of URLS.flatMap(u => [bust(u), u])) {
+        // Every request carries a changing query string so neither the browser nor the portal's CDN answers with a cached copy.
+        // There is deliberately no plain-URL fallback: the CDN holds that copy for hours, and showing it as live is worse than
+        // failing. A failed attempt is simply retried once with a new value.
+        const bust = (u, n) => u + '&_=' + n;
+        for (const url of URLS.flatMap(u => [bust(u, now), bust(u, now + 1)])) {
             try {
                 const res = await fetchFn(url, { signal });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
