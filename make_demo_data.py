@@ -8,7 +8,7 @@ FILES = [
     ('Recreation_centres.geojson', 'point', None),
     ('Library_details.geojson', 'point', None),
     ('Information_kiosks.geojson', 'point', None),
-    ('NSW Ambulance Station_EPSG4326.json', 'point', None),
+    ('NSW Ambulance Station_EPSG4326.json', 'point', 'NSW Ambulance Station'),
     ('Height of Building_EPSG4326.json', 'polygon', None),
     ('Business_rate_category.geojson', 'polygon', None),
     ('Free_15_minute_parking.geojson', 'polygon', None),
@@ -25,7 +25,7 @@ def generate(directory=Path('data')):
         geometry = {'type': 'Point', 'coordinates': [151.20, -33.86]} if kind == 'point' else {'type': 'Polygon', 'coordinates': [[[151.20,-33.86],[151.21,-33.86],[151.21,-33.85],[151.20,-33.85],[151.20,-33.86]]]}
         collection = {'type': 'FeatureCollection', 'features': [{'type': 'Feature', 'geometry': geometry, 'properties': {
             'OBJECTID': 1, 'topoid': 1, 'FacilityID': 1, 'Name': 'SYNTHETIC DEMO',
-            'generalname': 'SYNTHETIC DEMO', 'All_': 'SYNTHETIC DEMO', 'BUS_VALUE': 'SYNTHETIC DEMO',
+            'generalname': 'SYNTHETIC DEMO', 'CentreName': 'SYNTHETIC DEMO', 'StreetAddress': 'SYNTHETIC DEMO', 'All_': 'SYNTHETIC DEMO', 'BUS_VALUE': 'SYNTHETIC DEMO',
             'Street': 'SYNTHETIC DEMO', 'PlanYear': 'SYNTHETIC DEMO', 'source': 'synthetic fixture; not real infrastructure'}}]}
         payload = {wrapper: collection} if wrapper else collection
         (directory / name).write_text(json.dumps(payload, sort_keys=True) + '\n')

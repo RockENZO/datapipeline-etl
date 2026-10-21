@@ -35,3 +35,8 @@ assert.equal(escapeHtml(0), '0');
 const stationary = context.createLivePopupContent({ properties: { speed: 0 } }, { name: 'Live Buses' });
 assert(stationary.includes('0 km/h'), 'Stationary bus speed must remain visible');
 console.log('Map and live-bus popup injection/zero-value checks passed.');
+const acronym = context.createPopupContent({ properties: { _display_name: 'x', URL: 'u', HoursWeekday: 'h', No_Steps: 3 } }, { icon: '', name: 'n', display_field: 'Name' });
+assert(acronym.includes('URL:</strong>'), 'Acronym property names must not be split into letters');
+assert(acronym.includes('Hours Weekday:</strong>'), 'camelCase property names are split into words');
+assert(acronym.includes('No Steps:</strong>'), 'snake_case property names lose underscores');
+console.log('Popup label formatting checks passed.');

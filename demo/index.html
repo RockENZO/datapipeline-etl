@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sydney spatial ETL: live demo</title>
+    <meta name="description" content="Browser-only demo of the Sydney spatial ETL and search pipeline, running on synthetic data.">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="top">
+        <div class="brand">
+            <span class="logo">🗺️</span>
+            <div>
+                <h1>Sydney spatial ETL &amp; search</h1>
+                <p>Static demo: the pipeline runs in your browser on <strong>real open data</strong> for inner Sydney</p>
+            </div>
+        </div>
+        <a class="repo" href="https://github.com/RockENZO/datapipeline-etl">View source on GitHub ↗</a>
+    </header>
+
+    <main class="layout">
+        <aside class="pipeline" aria-label="Pipeline">
+            <div class="panel-head">
+                <h2>Pipeline</h2>
+                <button id="runBtn" class="btn ghost" type="button">↻ Re-run</button>
+            </div>
+            <ol class="stages" id="stages">
+                <li class="stage" data-stage="extract"><span class="dot"></span><div><h3>Extract</h3><p class="detail">Read 10 GeoJSON exports</p><div class="bar"><i></i></div></div></li>
+                <li class="stage" data-stage="transform"><span class="dot"></span><div><h3>Transform</h3><p class="detail">Normalise geometry, reject bad records</p><div class="bar"><i></i></div></div></li>
+                <li class="stage" data-stage="load"><span class="dot"></span><div><h3>Load</h3><p class="detail">Build 10 searchable indices</p><div class="bar"><i></i></div></div></li>
+                <li class="stage" data-stage="query"><span class="dot"></span><div><h3>Query</h3><p class="detail">Waiting for a search</p><div class="bar"><i></i></div></div></li>
+            </ol>
+            <h2 class="sub">Table-only records <span id="tableCount" class="chip">0</span></h2>
+            <div id="tableRows" class="tablerows"><p class="muted small">Matches from datasets without coordinates appear here.</p></div>
+            <h2 class="sub">Rejected records <span id="rejectCount" class="chip">0</span></h2>
+            <ul id="rejects" class="rejects"><li class="muted">Nothing yet</li></ul>
+            <h2 class="sub">Log</h2>
+            <pre id="log" class="log" aria-live="polite"></pre>
+            <p class="note">The same extract → transform → load → query path as the Docker app, ported to JavaScript, with an in-memory index standing in for Elasticsearch. Data: City of Sydney and Spatial NSW open datasets from <a href="https://github.com/RockENZO/Knia-data-repo">Knia-data-repo</a>, cut down to inner Sydney (<a href="https://github.com/RockENZO/datapipeline-etl/blob/main/demo/data/README.md">details</a>). Check each source's licence before reuse.</p>
+        </aside>
+
+        <section class="mapside">
+            <div class="controls">
+                <select id="datasetSelector" aria-label="Dataset"></select>
+                <input id="searchInput" type="search" placeholder="Search names, streets, suburbs…" autocomplete="off">
+                <button id="searchBtn" class="btn" type="button">Search</button>
+                <button id="clearBtn" class="btn ghost" type="button">Clear</button>
+                <span id="stats" class="stats">Run the pipeline to load data</span>
+            </div>
+            <div class="chips" id="chips" aria-label="Example searches"><span>Try</span></div>
+            <div class="mapwrap">
+                <div id="map"></div>
+                <div class="legend" id="legend"><h4>Dataset layers</h4><div id="legendItems"></div></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="popup_safety.js"></script>
+    <script src="pipeline.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -27,7 +27,7 @@ DATASETS = {
     'stairs': {
         'name': 'Stairs',
         'geometry_type': 'point',
-        'search_fields': ['properties.Name', 'properties.Address'],
+        'search_fields': ['properties.Name', 'properties.Address', 'properties.Suburb'],
         'display_field': 'Name',
         'color': '#9b59b6',
         'icon': '🚶'
@@ -35,7 +35,7 @@ DATASETS = {
     'recreation_centres': {
         'name': 'Recreation Centres',
         'geometry_type': 'point',
-        'search_fields': ['properties.Name', 'properties.Address'],
+        'search_fields': ['properties.Name', 'properties.Address', 'properties.Suburb'],
         'display_field': 'Name',
         'color': '#27ae60',
         'icon': '🏃'
@@ -43,7 +43,7 @@ DATASETS = {
     'library_details': {
         'name': 'Libraries',
         'geometry_type': 'point',
-        'search_fields': ['properties.Name', 'properties.Address'],
+        'search_fields': ['properties.Name', 'properties.Address', 'properties.Suburb'],
         'display_field': 'Name',
         'color': '#3498db',
         'icon': '📚'
@@ -51,8 +51,8 @@ DATASETS = {
     'information_kiosks': {
         'name': 'Information Kiosks',
         'geometry_type': 'point',
-        'search_fields': ['properties.Name', 'properties.Address'],
-        'display_field': 'Name',
+        'search_fields': ['properties.CentreName', 'properties.StreetAddress', 'properties.Suburb'],
+        'display_field': 'CentreName',
         'color': '#f39c12',
         'icon': 'ℹ️'
     },
