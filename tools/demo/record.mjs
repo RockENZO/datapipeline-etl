@@ -47,6 +47,7 @@ const capture = (async () => {
 const q = process.env.TILES === 'off' ? '?tiles=off' : '';
 await page.goto(`http://localhost:${port}/${q}`);
 await page.waitForFunction(() => document.querySelector('[data-stage="query"]').classList.contains('done'), null, { timeout: 30000 });
+if (process.env.TILES !== 'off') await page.waitForSelector('.leaflet-tile-loaded', { timeout: 30000 });  // fail loudly instead of recording a blank map
 await page.waitForTimeout(1500);
 
 const type = async text => { await page.fill('#searchInput', ''); await page.type('#searchInput', text, { delay: 90 }); await page.press('#searchInput', 'Enter'); };
