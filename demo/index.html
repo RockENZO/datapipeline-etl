@@ -53,7 +53,7 @@
             </details>
             <details>
                 <summary><span>About this demo</span></summary>
-                <p class="about">The same extract, transform, load and query steps as the Docker app, ported to JavaScript, with an in-memory index standing in for Elasticsearch. Data: City of Sydney and Spatial NSW open datasets from <a href="https://github.com/RockENZO/Knia-data-repo">Knia-data-repo</a>, cut down to inner Sydney (<a href="https://github.com/RockENZO/datapipeline-etl/blob/main/demo/data/README.md">details</a>). Check each source's licence before reuse. <a href="https://github.com/RockENZO/datapipeline-etl">View source</a></p>
+                <p class="about">The same extract, transform, load and query steps as the Docker app, ported to JavaScript, with an in-memory index standing in for Elasticsearch. Data: City of Sydney and Spatial NSW open datasets from <a href="https://github.com/RockENZO/Knia-data-repo">Knia-data-repo</a>, cut down to inner Sydney (<a href="https://github.com/RockENZO/datapipeline-etl/blob/main/demo/data/README.md">details</a>). The Live buses layer is not part of the extract: your browser polls the Spatial NSW real-time feed every 30 seconds, and the pill says so if the feed can't be reached. Check each source's licence before reuse. <a href="https://github.com/RockENZO/datapipeline-etl">View source</a></p>
             </details>
         </section>
     </aside>
@@ -82,6 +82,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="popup_safety.js"></script>
     <script src="pipeline.js"></script>
+    <script src="livebus.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

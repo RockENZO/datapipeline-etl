@@ -6,7 +6,7 @@ Docker application that indexes user-supplied Sydney GeoJSON datasets into Elast
 
 ## Live demo (GitHub Pages)
 
-**https://rockenzo.github.io/datapipeline-etl/** runs the extract, transform, load and query steps in the browser, so it needs no Docker, Elasticsearch or backend. It uses real open data (inner-Sydney extract of [Knia-data-repo](https://github.com/RockENZO/Knia-data-repo), see [demo/data/README.md](demo/data/README.md)) and an in-memory index in place of Elasticsearch. The Docker application below is still the full system; Pages cannot host Elasticsearch, Redis, Celery or PostgreSQL.
+**https://rockenzo.github.io/datapipeline-etl/** runs the extract, transform, load and query steps in the browser, so it needs no Docker, Elasticsearch or backend. It uses real open data (inner-Sydney extract of [Knia-data-repo](https://github.com/RockENZO/Knia-data-repo), see [demo/data/README.md](demo/data/README.md)) and an in-memory index in place of Elasticsearch. A **Live buses** layer polls the Spatial NSW real-time feed from the browser every 30 seconds (there is no indexer on Pages); if the feed can't be reached cross-origin, the layer shows as unavailable and the rest of the demo is unaffected. The Docker application below is still the full system; Pages cannot host Elasticsearch, Redis, Celery or PostgreSQL.
 
 Deploys come from `.github/workflows/pages.yml` on pushes to `main` that touch `demo/`. In the repository settings, set Pages to build from **GitHub Actions** (Settings > Pages > Source). Run it locally with `tools/build_pages.sh && python3 -m http.server -d _site`. Re-record the GIF with `node tools/demo/record.mjs` (see [tools/demo](tools/demo/README.md)).
 

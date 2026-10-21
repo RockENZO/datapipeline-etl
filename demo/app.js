@@ -11,6 +11,7 @@
     map.fitBounds([[-33.935, 151.150], [-33.825, 151.275]], fitPad());   // the extract's inner-Sydney viewport
     map.createPane('shapes').style.zIndex = 410;
     map.createPane('points').style.zIndex = 450;
+    map.createPane('live').style.zIndex = 460;
     const mapEl = document.getElementById('map');
     if (params.get('tiles') === 'off') {
         mapEl.classList.add('no-tiles');
@@ -30,6 +31,54 @@
         layers[key] = L.layerGroup().addTo(map);
         counts[key] = 0;
     });
+
+    // Live buses: polled straight from Spatial NSW in the browser (see livebus.js). No backend, so it only
+    // works while the feed answers cross-origin requests; otherwise the pill says so and the rest still works.
+    const LIVE_MS = 30000, LIVE_COLOR = '#5e5ce6';
+    const busLayer = L.layerGroup().addTo(map);
+    const busMarkers = new Map();
+    const live = { state: 'connecting', count: 0, updated: null, timer: null, busy: false };
+
+    function busPopup(b) {
+        const rows = [['Route', b.route], ['Vehicle', b.label || b.plate], ['Speed', b.speed ? b.speed + ' km/h' : ''], ['Updated', live.updated ? live.updated.toLocaleTimeString() : '']]
+            .filter(([, v]) => v).map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd>`).join('');
+        return `<div class="popup-kicker" style="color:${LIVE_COLOR}">Live bus</div><div class="popup-title">${escapeHtml(b.route ? 'Route ' + b.route : 'Bus ' + b.id)}</div><dl class="popup-info">${rows}</dl>`;
+    }
+
+    function showBuses(buses) {
+        const seen = new Set();
+        for (const b of buses) {
+            seen.add(b.id);
+            let m = busMarkers.get(b.id);
+            if (m) { m.setLatLng([b.lat, b.lon]); m.setPopupContent(busPopup(b)); } else {
+                m = L.circleMarker([b.lat, b.lon], { pane: 'live', radius: 5, weight: 1.5, color: '#fff', fillColor: LIVE_COLOR, fillOpacity: 1 }).bindPopup(busPopup(b));
+                busMarkers.set(b.id, m);
+                busLayer.addLayer(m);
+            }
+        }
+        for (const [id, m] of busMarkers) if (!seen.has(id)) { busLayer.removeLayer(m); busMarkers.delete(id); }
+    }
+
+    async function pollBuses() {
+        if (live.busy || !map.hasLayer(busLayer) || document.hidden) return;
+        live.busy = true;
+        const ctl = new AbortController(), timeout = setTimeout(() => ctl.abort(), 15000);
+        try {
+            const buses = await window.LiveBus.fetchBuses(fetch, ctl.signal);
+            live.updated = new Date();
+            live.count = buses.length;
+            live.state = buses.length ? 'live' : 'empty';
+            showBuses(buses);
+        } catch (e) {
+            // Keep the last snapshot visible if we had one; only a first-ever failure marks the feed unavailable.
+            live.state = live.updated ? 'stale' : 'offline';
+        } finally { clearTimeout(timeout); live.busy = false; drawLegend(); }
+    }
+    function startBuses() {
+        pollBuses();
+        live.timer = setInterval(pollBuses, LIVE_MS);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) pollBuses(); });
+    }
 
     const sleep = ms => new Promise(r => setTimeout(r, ms));
     function log(line) { els.log.textContent += line + '\n'; els.log.scrollTop = els.log.scrollHeight; }
@@ -208,6 +257,7 @@
         }
     }
 
+    const LIVE_LABEL = { connecting: 'Live buses · connecting', live: 'Live buses', empty: 'Live buses · none now', stale: 'Live buses · paused', offline: 'Live buses · unavailable' };
     const SHORT = { building_complex_points: 'Buildings', stairs: 'Stairs', recreation_centres: 'Recreation', information_kiosks: 'Kiosks', nsw_ambulance_stations: 'Ambulance', business_rate_category: 'Business rates', free_15_minute_parking: 'Free parking', ticket_parking_rates: 'Ticket parking' };
 
     function drawLegend() {
@@ -245,6 +295,11 @@
                 drawLegend();
             });
         });
+        make(LIVE_LABEL[live.state], map.hasLayer(busLayer) && live.state !== 'offline', LIVE_COLOR, false, live.state === 'live' ? live.count : null, () => {
+            if (map.hasLayer(busLayer)) map.removeLayer(busLayer); else { map.addLayer(busLayer); pollBuses(); }
+            drawLegend();
+        });
+        els.legend.lastChild.dataset.live = live.state;
     }
 
     els.form.addEventListener('submit', e => { e.preventDefault(); search({ fit: true }); els.input.blur(); });
@@ -277,7 +332,8 @@
         if (layer) layer.openPopup();
     }
 
-    window.__demo = { search, runPipeline, map, openFirst };
+    window.__demo = { search, runPipeline, map, openFirst, pollBuses };
     drawLegend();
     runPipeline();
+    if (params.get('buses') !== 'off') startBuses();
 })();
