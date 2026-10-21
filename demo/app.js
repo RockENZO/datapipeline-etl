@@ -60,10 +60,10 @@
         entry.anim = requestAnimationFrame(step);
     }
 
-    // Each new record is matched to an existing marker by id, then vehicle id, then trip, so a selected bus keeps its popup
+    // Each new record is matched to an existing marker by vehicle id (stable), then record id, then trip, so a selected bus keeps its popup
     // even if the feed re-labels it. A bus that misses a poll or two stays (dimmed) rather than vanishing under the user.
     function showBuses(buses) {
-        const keys = [['id', b => b.id], ['vid', b => b.vid], ['trip', b => b.trip && b.route && b.trip + '|' + b.route]];
+        const keys = [['vid', b => b.vid], ['id', b => b.id], ['trip', b => b.trip && b.route && b.trip + '|' + b.route]];
         const index = keys.map(([, f]) => new Map([...busEntries].map(e => [f(e.b), e]).filter(([k]) => k)));
         const claimed = new Set();
         for (const b of buses) {

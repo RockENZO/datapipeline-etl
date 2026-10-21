@@ -249,7 +249,7 @@
         }
         
         // Live buses are updated in place so an open popup survives a refresh and buses glide instead of jumping.
-        // Records are matched to existing markers by bus id, then vehicle id, then trip, in case the feed relabels a bus.
+        // Records are matched to existing markers by vehicle id (stable), then bus id, then trip, in case the feed relabels a bus.
         const liveBusEntries = new Set();   // { marker, props, missed, anim }
 
         function glideMarker(entry, lat, lon) {
@@ -270,7 +270,7 @@
             const owned = new Set([...liveBusEntries].map(e => e.marker));
             liveBusEntries.forEach(e => { if (!layer.hasLayer(e.marker)) liveBusEntries.delete(e); });
             layer.eachLayer(l => { if (!owned.has(l)) layer.removeLayer(l); });
-            const keys = [p => p.bus_id, p => p.vehicle_id, p => p.trip_id && p.route_id && `${p.trip_id}|${p.route_id}`];
+            const keys = [p => p.vehicle_id, p => p.bus_id, p => p.trip_id && p.route_id && `${p.trip_id}|${p.route_id}`];
             const index = keys.map(key => new Map([...liveBusEntries].map(e => [key(e.props), e]).filter(([k]) => k)));
             const claimed = new Set();
             features.forEach(feature => {
