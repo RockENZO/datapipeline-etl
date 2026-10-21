@@ -386,7 +386,13 @@
         if (layer) layer.openPopup();
     }
 
-    function openBus() { const e = [...busEntries][0]; if (e) e.m.openPopup(); }
+    // Opens the popup of the live bus nearest the middle of the current view (never one off-screen: that would pan the map away).
+    function openBus() {
+        const view = map.getBounds(), c = view.getCenter();
+        const e = [...busEntries].filter(e => view.contains(e.m.getLatLng())).sort((a, b) => c.distanceTo(a.m.getLatLng()) - c.distanceTo(b.m.getLatLng()))[0];
+        if (e) e.m.openPopup();
+        return !!e;
+    }
 
     window.__demo = { search, runPipeline, map, openFirst, pollBuses, openBus };
     drawLegend();

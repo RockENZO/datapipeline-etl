@@ -42,7 +42,9 @@ let capturing = true, frames = 0;
 const started = Date.now();
 const capture = (async () => {
     while (capturing) {
-        await page.screenshot({ path: path.join(work, String(frames++).padStart(5, '0') + '.jpg'), type: 'jpeg', quality: 80 });
+        // The first shots can run before the page has navigated, and newer Playwright/Node combinations reject those: skip the frame.
+        try { await page.screenshot({ path: path.join(work, String(frames).padStart(5, '0') + '.jpg'), type: 'jpeg', quality: 80 }); frames++; }
+        catch { await new Promise(r => setTimeout(r, 100)); }
     }
 })();
 // BUSES=off keeps the live feed out (offline machines, repeatable shots); otherwise the recording includes it and needs network.
@@ -75,7 +77,7 @@ await page.waitForTimeout(800);
 if (buses) {                                   // live buses: open one and let a refresh pass; the popup must stay open
     await page.waitForSelector('.layer[data-live="live"], .layer[data-live="old"]', { timeout: 30000 });   // fail loudly if the feed is unreachable
     await page.waitForTimeout(1200);
-    await page.evaluate(() => window.__demo.openBus());
+    if (!(await page.evaluate(() => window.__demo.openBus()))) throw new Error('no live bus in view to open');
     await page.waitForTimeout(7000);
     if (!(await page.evaluate(() => !!document.querySelector('.leaflet-popup')))) throw new Error('live bus popup closed on refresh');
     await page.keyboard.press('Escape');
