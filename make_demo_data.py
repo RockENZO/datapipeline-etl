@@ -8,7 +8,7 @@ FILES = [
     ('Recreation_centres.geojson', 'point', None),
     ('Library_details.geojson', 'point', None),
     ('Information_kiosks.geojson', 'point', None),
-    ('NSW Ambulance Station_EPSG4326.json', 'point', None),
+    ('NSW Ambulance Station_EPSG4326.json', 'point', 'NSW Ambulance Station'),
     ('Height of Building_EPSG4326.json', 'polygon', None),
     ('Business_rate_category.geojson', 'polygon', None),
     ('Free_15_minute_parking.geojson', 'polygon', None),

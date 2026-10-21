@@ -10,237 +10,52 @@
     
     <!-- Custom CSS -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --navy: #0d1b33; --navy-2: #13264a; --navy-3: #1b3260; --line: #27406e;
+            --text: #e6ecf7; --muted: #8fa3c7; --lav: #a78bfa; --orange: #ff9f43;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f5f6fa;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .header h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
-        }
-        
-        .controls {
-            background: white;
-            padding: 1rem;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            flex-wrap: wrap;
-        }
-        
-        .search-container {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            flex: 1;
-            min-width: 300px;
-        }
-        
-        .dataset-selector {
-            padding: 0.5rem;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            min-width: 200px;
-        }
-        
-        .search-input {
-            flex: 1;
-            padding: 0.75rem;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        
-        .search-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .search-btn, .clear-btn, .toggle-btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .search-btn {
-            background: #667eea;
-            color: white;
-        }
-        
-        .search-btn:hover {
-            background: #5a6fd8;
-            transform: translateY(-1px);
-        }
-        
-        .clear-btn {
-            background: #f1f2f6;
-            color: #2f3542;
-        }
-        
-        .clear-btn:hover {
-            background: #ddd;
-        }
-        
-        .toggle-btn {
-            background: #27ae60;
-            color: white;
-        }
-        
-        .toggle-btn:hover {
-            background: #219a52;
-        }
-        
-        .toggle-btn.inactive {
-            background: #95a5a6;
-        }
-        
-        .stats {
-            color: #666;
-            font-size: 14px;
-            white-space: nowrap;
-        }
-        
-        .map-container {
-            position: relative;
-            height: calc(100vh - 140px);
-        }
-        
-        #map {
-            height: 100%;
-            width: 100%;
-        }
-        
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.9);
-            padding: 2rem;
-            border-radius: 8px;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        
-        .popup-content {
-            max-width: 300px;
-        }
-        
-        .popup-title {
-            font-weight: bold;
-            color: #2f3542;
-            margin-bottom: 0.5rem;
-            font-size: 16px;
-        }
-        
-        .popup-info {
-            color: #666;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-        
-        .popup-info div {
-            margin-bottom: 0.25rem;
-        }
-        
-        .bus-marker {
-            filter: drop-shadow(1px 1px 3px rgba(0,0,0,0.4));
-            z-index: 1000;
-            background: none !important;
-            border: none !important;
-        }
-        
-        .bus-marker:hover {
-            transform: scale(1.1);
-            transition: transform 0.2s ease;
-        }
-        
-        /* Override any default Leaflet marker styles for bus markers */
-        .bus-marker .leaflet-marker-icon {
-            background: none !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-        
-        .dataset-legend {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 1rem;
-            border-radius: 8px;
-            z-index: 1000;
-            min-width: 200px;
-            max-height: 400px;
-            overflow-y: auto;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .dataset-legend h4 {
-            margin-bottom: 0.5rem;
-            color: #2f3542;
-            font-size: 14px;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            font-size: 12px;
-            cursor: pointer;
-            padding: 0.25rem;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
-        
-        .legend-item:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .legend-item.inactive {
-            opacity: 0.5;
-        }
-        
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            margin-right: 0.5rem;
-            border: 2px solid #fff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-        
-        .legend-polygon {
-            border-radius: 2px;
-        }
-        
-        .legend-count {
-            margin-left: auto;
-            color: #666;
-            font-weight: bold;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--navy); color: var(--text); display: flex; flex-direction: column; }
+        .header { background: linear-gradient(135deg, var(--navy-2), var(--navy)); border-bottom: 1px solid var(--line); padding: .75rem 1.25rem; }
+        .header h1 { font-size: 1.15rem; font-weight: 600; }
+        .controls { background: var(--navy-2); border-bottom: 1px solid var(--line); padding: .75rem 1rem; display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+        .search-container { display: flex; gap: .5rem; align-items: center; flex: 1; min-width: 300px; flex-wrap: wrap; }
+        .dataset-selector, .search-input { background: var(--navy); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: .55rem .7rem; font-size: .9rem; }
+        .dataset-selector { min-width: 190px; }
+        .search-input { flex: 1; min-width: 180px; }
+        .search-input:focus, .dataset-selector:focus { outline: 2px solid var(--lav); }
+        .search-btn, .clear-btn, .toggle-btn { padding: .55rem 1rem; border: 0; border-radius: 8px; font-size: .85rem; font-weight: 600; cursor: pointer; }
+        .search-btn { background: var(--lav); color: #140f2b; }
+        .clear-btn, .toggle-btn { background: transparent; color: var(--text); border: 1px solid var(--line); }
+        .search-btn:hover, .clear-btn:hover, .toggle-btn:hover { filter: brightness(1.15); }
+        .toggle-btn.inactive { opacity: .6; }
+        .stats { color: var(--muted); font-size: .82rem; white-space: nowrap; }
+        .map-container { position: relative; flex: 1; min-height: 320px; }
+        #map { height: 100%; width: 100%; background: #0f1f3d; }
+        .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.6); }
+        .leaflet-container { font-family: inherit; }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--navy-2); color: var(--text); border: 1px solid var(--line); }
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,27,51,.92); border: 1px solid var(--line); padding: 1.25rem 2rem; border-radius: 10px; z-index: 1000; display: none; }
+        .popup-content { max-width: 300px; }
+        .popup-title { font-weight: 600; margin-bottom: .35rem; font-size: 1rem; }
+        .popup-info { color: #c8d4ee; font-size: .82rem; line-height: 1.45; }
+        .popup-info div { margin-bottom: .2rem; }
+        .popup-info strong { color: var(--muted); }
+        .bus-marker { filter: drop-shadow(1px 1px 3px rgba(0,0,0,.4)); z-index: 1000; background: none !important; border: none !important; }
+        .bus-marker:hover { transform: scale(1.1); transition: transform .2s ease; }
+        .bus-marker .leaflet-marker-icon { background: none !important; border: none !important; box-shadow: none !important; }
+        .dataset-legend { position: absolute; top: 10px; right: 10px; background: rgba(13,27,51,.92); border: 1px solid var(--line); padding: .7rem .8rem; border-radius: 10px; z-index: 1000; min-width: 210px; max-height: calc(100% - 20px); overflow-y: auto; }
+        .dataset-legend h4 { margin-bottom: .4rem; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
+        .legend-item { display: flex; align-items: center; margin-bottom: .2rem; font-size: .78rem; cursor: pointer; padding: .2rem .25rem; border-radius: 6px; }
+        .legend-item:hover { background: var(--navy-3); }
+        .legend-item.inactive { opacity: .4; }
+        .legend-color { width: 12px; height: 12px; border-radius: 50%; margin-right: .5rem; border: 2px solid #fff; flex: none; }
+        .legend-polygon { border-radius: 3px; }
+        .legend-count { margin-left: auto; color: var(--orange); font-weight: 700; }
+        @media (max-width: 800px) {
+            .dataset-legend { position: static; margin: .5rem; }
+            .map-container { min-height: 520px; }
         }
     </style>
 </head>
@@ -261,7 +76,7 @@
             <button class="search-btn" id="searchBtn">🔍 Search</button>
             <button class="clear-btn" id="clearBtn">Clear</button>
         </div>
-        <button class="toggle-btn" id="toggleAllBtn">Show All</button>
+        <button class="toggle-btn" id="toggleAllBtn">Hide All</button>
         <div class="stats" id="stats">Ready to search</div>
     </div>
     
@@ -408,7 +223,7 @@
             // Add relevant properties
             Object.entries(props).forEach(([key, value]) => {
                 if (!key.startsWith('_') && value !== null && value !== undefined && value !== '' && key !== dataset.display_field) {
-                    const cleanKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                    const cleanKey = key.replace(/([a-z\d])([A-Z])/g, '$1 $2').replace(/_/g, ' ').replace(/^./, str => str.toUpperCase());
                     content += `<div><strong>${escapeHtml(cleanKey)}:</strong> ${escapeHtml(value)}</div>`;
                 }
             });
@@ -612,8 +427,12 @@
         });
         
         // Load data when map moves
+        // A search redraws every layer, which would close a popup that has just auto-panned the map.
+        let popupOpen = false;
+        map.on('popupopen', () => { popupOpen = true; });
+        map.on('popupclose', () => { popupOpen = false; });
         map.on('moveend', () => {
-            if (searchInput.value || datasetSelector.value) {
+            if (!popupOpen && (searchInput.value || datasetSelector.value)) {
                 searchData();
             }
         });

@@ -2,7 +2,15 @@
 
 Docker application that indexes user-supplied Sydney GeoJSON datasets into Elasticsearch and serves an interactive map. A separate address API submits PostgreSQL searches through Redis to a Celery worker.
 
-![Map demo](data/demo_image.png)
+![Static demo recording](docs/demo.gif)
+
+## Live demo (GitHub Pages)
+
+**https://rockenzo.github.io/datapipeline-etl/** runs the extract, transform, load and query steps in the browser, so it needs no Docker, Elasticsearch or backend. It uses real open data (inner-Sydney extract of [Knia-data-repo](https://github.com/RockENZO/Knia-data-repo), see [demo/data/README.md](demo/data/README.md)) and an in-memory index in place of Elasticsearch. The Docker application below is still the full system; Pages cannot host Elasticsearch, Redis, Celery or PostgreSQL.
+
+Deploys come from `.github/workflows/pages.yml` on pushes to `main` that touch `demo/`. In the repository settings, set Pages to build from **GitHub Actions** (Settings > Pages > Source). Run it locally with `tools/build_pages.sh && python3 -m http.server -d _site`. Re-record the GIF with `node tools/demo/record.mjs` (see [tools/demo](tools/demo/README.md)).
+
+![Map screenshot](data/demo_image.png)
 
 ## Run the map
 
@@ -43,7 +51,7 @@ Place the eleven filenames listed in `make_demo_data.py` under `data/`, using th
 python -m venv .venv
 . .venv/bin/activate
 pip install -r requirements-dev.txt
-python -m unittest discover -s tests -p 'test_*.py' -v
+python -m unittest discover -s tests -p 'test_*.py' -v   # includes the Node checks for popups and the Pages demo
 docker compose config --quiet
 docker compose -f compose.test.yml up --build --abort-on-container-exit --exit-code-from integration
 docker compose -f compose.test.yml down -v

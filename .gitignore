@@ -42,3 +42,9 @@ __pycache__/
 .DS_Store
 data/*.geojson
 data/*.json
+
+# Synthetic inputs for the static Pages demo are intentionally tracked
+!demo/data/
+!demo/data/*
+
+_site/

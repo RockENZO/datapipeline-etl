@@ -119,11 +119,10 @@ index_mappings = {
                     "type": "object",
                     "properties": {
                         "OBJECTID": {"type": "integer"},
-                        "Name": {"type": "text"},
-                        "Address": {"type": "text"},
+                        "CentreName": {"type": "text"},
+                        "StreetAddress": {"type": "text"},
                         "Suburb": {"type": "text"},
-                        "Type": {"type": "keyword"},
-                        "Status": {"type": "keyword"}
+                        "Phone": {"type": "keyword"}
                     }
                 }
             }
@@ -235,6 +234,10 @@ index_mappings = {
     }
 }
 
+# Council exports whose records carry no coordinates (library opening hours, a recovery-rate time
+# series). They are legitimately empty on a map, so they must not abort startup.
+NON_SPATIAL_DATASETS = {'library_details', 'residential_waste_recovery'}
+
 def process_geometry(geometry):
     """Process geometry based on type for Elasticsearch indexing."""
     if not geometry or not geometry.get('coordinates'):
@@ -322,6 +325,8 @@ def index_dataset(index_name, file_path, id_field=None, data_path=None):
             # Bulk index
             helpers.bulk(es, actions, chunk_size=1000, refresh="wait_for")
             logger.info(f"Successfully indexed {len(actions)} documents to {index_name}")
+        elif index_name in NON_SPATIAL_DATASETS:
+            logger.warning(f"{index_name}: source records have no geometry; nothing to index on the map")
         else:
             raise ValueError(f"No valid documents found for {index_name}")
             
@@ -334,10 +339,10 @@ def index_all_datasets():
     datasets = [
         ('building_complex_points', '/app/data/BuildingComplexPoint_EPSG4326.json', 'topoid', 'BuildingComplexPoint'),
         ('stairs', '/app/data/Stairs.geojson', 'OBJECTID', None),
-        ('recreation_centres', '/app/data/Recreation_centres.geojson', 'FacilityID', None),
+        ('recreation_centres', '/app/data/Recreation_centres.geojson', 'OBJECTID', None),
         ('library_details', '/app/data/Library_details.geojson', 'FacilityID', None),
         ('information_kiosks', '/app/data/Information_kiosks.geojson', 'OBJECTID', None),
-        ('nsw_ambulance_stations', '/app/data/NSW Ambulance Station_EPSG4326.json', 'topoid', None),
+        ('nsw_ambulance_stations', '/app/data/NSW Ambulance Station_EPSG4326.json', 'topoid', 'NSW Ambulance Station'),
         ('height_of_building', '/app/data/Height of Building_EPSG4326.json', 'topoid', None),
         ('business_rate_category', '/app/data/Business_rate_category.geojson', 'OBJECTID', None),
         ('free_15_minute_parking', '/app/data/Free_15_minute_parking.geojson', 'OBJECTID', None),
