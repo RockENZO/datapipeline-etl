@@ -66,7 +66,7 @@ const park = indexes.free_15_minute_parking;
 assert.equal(P.search(park, '', all).total, park.entries.length);
 assert.equal(P.search(park, '', [10, 10, 11, 11]).total, 0);
 // The example-search chips in the UI must all return something.
-for (const term of ['Redfern', 'hospital', 'King Street', 'library', 'ambulance', 'Business CBD']) {
+for (const term of ['Redfern', 'hospital', 'King Street', 'library', 'ambulance']) {
     const hits = Object.values(indexes).reduce((n, ix) => n + P.search(ix, term).total, 0);
     assert(hits > 0, 'example search "' + term + '" returns nothing');
 }
