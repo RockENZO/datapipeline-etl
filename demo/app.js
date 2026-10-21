@@ -41,6 +41,8 @@
     const busEntries = new Set();   // { m: marker, b: last bus record, missed: polls it was absent, anim: frame id }
     const live = { state: 'connecting', count: 0, updated: null, newest: 0, timer: null, busy: false };
 
+    const liveAge = () => (live.newest ? Date.now() / 1000 - live.newest : 0);   // seconds since the newest bus position
+
     function busPopup(b) {
         const rows = [['Route', b.route], ['Vehicle', b.label || b.plate], ['Speed', b.speed ? b.speed + ' km/h' : ''], ['Position time', b.ts ? new Date(b.ts * 1000).toLocaleTimeString() : '']]
             .filter(([, v]) => v).map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd>`).join('');
@@ -95,11 +97,22 @@
         const ctl = new AbortController(), timeout = setTimeout(() => ctl.abort(), 15000);
         try {
             const buses = await window.LiveBus.fetchBuses(fetch, ctl.signal);
+            const newest = Math.max(0, ...buses.map(b => b.ts));
+            // A cache can hand back an older copy of the feed. Compare vehicle by vehicle (the snapshot maximum can fall
+            // legitimately when the newest bus leaves the result): a copy where some buses are older than what we hold and none
+            // are newer is stale, and is dropped.
+            const held = new Map([...busEntries].map(e => [e.b.vid || e.b.id, e.b.ts]));
+            let older = 0, newer = 0;
+            for (const b of buses) {
+                const was = held.get(b.vid || b.id);
+                if (!was || !b.ts) continue;
+                if (b.ts < was) older++; else if (b.ts > was) newer++;
+            }
+            if (older && !newer) throw new Error('response older than the current snapshot');
             live.updated = new Date();
             live.count = buses.length;
-            live.newest = Math.max(0, ...buses.map(b => b.ts));
-            const age = live.newest ? Date.now() / 1000 - live.newest : 0;
-            live.state = !buses.length ? 'empty' : age > 180 ? 'old' : 'live';
+            live.newest = newest;
+            live.state = !buses.length ? 'empty' : liveAge() > 180 ? 'old' : 'live';
             showBuses(buses);
         } catch (e) {
             // Keep the last snapshot visible if we had one; only a first-ever failure marks the feed unavailable.
@@ -290,7 +303,7 @@
         }
     }
 
-    const LIVE_LABEL = { connecting: 'Live buses · connecting', live: 'Live buses', empty: 'Live buses · none now', old: 'Live buses · feed not updating', stale: 'Live buses · paused', offline: 'Live buses · unavailable' };
+    const LIVE_LABEL = { connecting: 'Live buses · connecting', live: 'Live buses', empty: 'Live buses · none now', old: () => `Live buses · ${Math.max(1, Math.round(liveAge() / 60))} min behind`, stale: 'Live buses · paused', offline: 'Live buses · unavailable' };
     const SHORT = { building_complex_points: 'Buildings', stairs: 'Stairs', recreation_centres: 'Recreation', information_kiosks: 'Kiosks', nsw_ambulance_stations: 'Ambulance', business_rate_category: 'Business rates', free_15_minute_parking: 'Free parking', ticket_parking_rates: 'Ticket parking' };
 
     // The live pill changes every poll, so it is updated in place rather than rebuilding the dock (which would drop keyboard focus).
@@ -306,7 +319,8 @@
             if (!n) { n = document.createElement('span'); n.className = 'n'; livePill.append(n); }
             n.textContent = live.count.toLocaleString();
         } else if (n) n.remove();
-        livePill.firstChild.nextSibling.textContent = LIVE_LABEL[live.state];
+        const label = LIVE_LABEL[live.state];
+        livePill.firstChild.nextSibling.textContent = typeof label === 'function' ? label() : label;
         livePill.title = live.updated ? `Fetched ${live.updated.toLocaleTimeString()}` + (live.newest ? `; newest bus position ${new Date(live.newest * 1000).toLocaleTimeString()}` : '') : '';
     }
 

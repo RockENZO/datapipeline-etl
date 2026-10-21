@@ -37,7 +37,7 @@ assert.deepEqual(L.parseBuses({ features: [null, 7, { attributes: attrs('ok', 1,
     assert(seen[0].endsWith('&_=123'), 'first request carries a cache-busting parameter');
     const order = [];
     await assert.rejects(L.fetchBuses(async url => { order.push(url); throw new TypeError('nope'); }, undefined, 9));
-    assert.deepEqual(order.map(u => u.includes('f=geojson') + ':' + u.endsWith('&_=9')), ['false:true', 'false:false', 'true:true', 'true:false'], 'each endpoint is tried cache-busted, then plain');
+    assert.deepEqual(order.map(u => u.includes('f=geojson') + ':' + u.split('&_=')[1]), ['false:9', 'false:10', 'true:9', 'true:10'], 'each endpoint is tried twice with a fresh parameter and never as a plain URL');
     // An empty feed is fine; a non-empty feed with nothing usable is a failed refresh.
     assert.deepEqual(await L.fetchBuses(async () => ({ ok: true, json: async () => ({ features: [] }) })), []);
     await assert.rejects(L.fetchBuses(async () => ({ ok: true, json: async () => ({ features: [{ attributes: { id: 'z' } }] }) })), /no usable/);
