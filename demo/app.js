@@ -98,8 +98,17 @@
         try {
             const buses = await window.LiveBus.fetchBuses(fetch, ctl.signal);
             const newest = Math.max(0, ...buses.map(b => b.ts));
-            // A cache can hand back an older copy of the feed; never replace newer positions with older ones.
-            if (newest && live.newest && newest < live.newest) throw new Error('response older than the current snapshot');
+            // A cache can hand back an older copy of the feed. Compare vehicle by vehicle (the snapshot maximum can fall
+            // legitimately when the newest bus leaves the result): a copy where some buses are older than what we hold and none
+            // are newer is stale, and is dropped.
+            const held = new Map([...busEntries].map(e => [e.b.vid || e.b.id, e.b.ts]));
+            let older = 0, newer = 0;
+            for (const b of buses) {
+                const was = held.get(b.vid || b.id);
+                if (!was || !b.ts) continue;
+                if (b.ts < was) older++; else if (b.ts > was) newer++;
+            }
+            if (older && !newer) throw new Error('response older than the current snapshot');
             live.updated = new Date();
             live.count = buses.length;
             live.newest = newest;
