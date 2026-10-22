@@ -89,40 +89,68 @@ def create_bus_index():
         logger.info(f"Index might already exist: {e}")
 
 def fetch_bus_data():
-    """Fetch live bus data from NSW Spatial API."""
+    """Fetch every enumerated object ID, or discard the entire refresh.
+
+    Membership is fixed by the initial ID query; moving vehicles are not a
+    transactionally frozen time snapshot. Departing IDs cause a safe retry on
+    the next scheduled refresh rather than publication of a partial feed.
+    """
+    deadline = time.monotonic() + 120
+
+    def query(params):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ValueError("Bus refresh exceeded its 120-second request budget")
+        response = requests.get(f"{BUSES_API_URL}/query", params=params,
+                                timeout=min(30, remaining))
+        response.raise_for_status()
+        result = response.json()
+        if not isinstance(result, dict) or 'error' in result:
+            raise ValueError("Invalid bus API response or upstream error")
+        if result.get('exceededTransferLimit', False) is not False:
+            raise ValueError("Bus API truncated the requested results")
+        return result
+
     try:
-        logger.info("Fetching live bus data...")
-        
-        # Updated endpoints with the correct FeatureServer/0 structure
-        endpoints = [
-            f"{BUSES_API_URL}/query?f=json&where=1=1&outFields=*&outSR=4326&resultRecordCount=1000",
-            f"{BUSES_API_URL}/query?f=geojson&where=1=1&outFields=*&outSR=4326&resultRecordCount=1000",
-            f"{BUSES_API_URL}?f=json&where=1=1&outFields=*&outSR=4326"
-        ]
-        
-        for endpoint in endpoints:
-            try:
-                logger.info(f"Trying bus data endpoint: {endpoint}")
-                response = requests.get(endpoint, timeout=30)
-                response.raise_for_status()
-                data = response.json()
-                
-                logger.info(f"Response keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
-                
-                # Check if we got valid data
-                if isinstance(data, dict) and ('features' in data or 'records' in data):
-                    logger.info(f"Successfully fetched bus data from: {endpoint}")
-                    return data
-                    
-            except requests.RequestException as e:
-                logger.warning(f"Failed to fetch from {endpoint}: {e}")
-                continue
-        
-        logger.error("All bus API endpoints failed")
-        return None
-        
-    except Exception as e:
-        logger.error(f"Error fetching bus data: {e}")
+        enumeration = query({'f': 'json', 'where': '1=1', 'returnIdsOnly': True})
+        field = enumeration.get('objectIdFieldName')
+        ids = enumeration.get('objectIds')
+        if (not isinstance(field, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', field)
+                or not isinstance(ids, list) or len(ids) > 10000
+                or any(type(value) is not int for value in ids)
+                or len(set(ids)) != len(ids)):
+            raise ValueError("Invalid or oversized bus object ID enumeration")
+        features = []
+        for start in range(0, len(ids), 250):
+            requested = ids[start:start + 250]
+            # This ArcGIS-compatible GeoServer ignores objectIds; use its
+            # supported SQL filter and still verify exact returned membership.
+            page = query({'f': 'json', 'where': f"{field} IN ({','.join(map(str, requested))})",
+                          'outFields': '*', 'outSR': 4326,
+                          'resultRecordCount': len(requested)})
+            reference = page.get('spatialReference')
+            if reference is not None and (not isinstance(reference, dict)
+                    or reference.get('latestWkid', reference.get('wkid')) != 4326):
+                raise ValueError("Unexpected bus page spatial reference")
+            rows = page.get('features')
+            if not isinstance(rows, list):
+                raise ValueError("Bus API features must be a list")
+            returned = []
+            for feature in rows:
+                if not isinstance(feature, dict):
+                    raise ValueError("Malformed bus feature")
+                properties = feature.get('attributes', feature.get('properties'))
+                value = properties.get(field) if isinstance(properties, dict) else None
+                if type(value) is not int:
+                    raise ValueError("Bus feature has no valid enumerated object ID")
+                returned.append(value)
+            if len(returned) != len(requested) or set(returned) != set(requested):
+                raise ValueError("Bus page contains missing, duplicate or unexpected IDs")
+            features.extend(rows)
+        logger.info("Fetched all %d enumerated bus records", len(features))
+        return {'features': features, 'spatialReference': {'wkid': 4326}}
+    except (requests.RequestException, ValueError, TypeError) as error:
+        logger.error("Discarding incomplete bus refresh: %s", error)
         return None
 
 def transform_bus_data(data):
