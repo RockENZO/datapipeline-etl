@@ -84,3 +84,29 @@ class BusCoordinateTests(unittest.TestCase):
         self.assertEqual(len(buses.transform_bus_data({'spatialReference': {'wkid': 4326}, 'features': [feature]})), 1)
         feature['geometry']['spatialReference'] = {'wkid': 4326}
         self.assertEqual(len(buses.transform_bus_data({'spatialReference': {'wkid': 4283}, 'features': [feature]})), 1)
+
+class IncompleteTransformationTests(unittest.TestCase):
+    def test_mixed_valid_and_invalid_records_never_publish_a_partial_refresh(self):
+        good = BusCoordinateTests().feature(-33, 151, 'good')
+        bad = BusCoordinateTests().feature(float('nan'), 151, 'bad')
+        for features in [[good, bad], [good, BusCoordinateTests().feature(-33, 151, None)]]:
+            with self.subTest(features=features), patch.object(buses, 'fetch_bus_data', return_value={'features': features}), patch.object(buses.helpers, 'bulk') as bulk, patch.object(buses, 'es') as client:
+                buses.index_bus_data()
+                bulk.assert_not_called()
+                client.delete_by_query.assert_not_called()
+
+    def test_duplicate_vehicle_ids_do_not_overwrite_within_a_refresh(self):
+        features = [BusCoordinateTests().feature(-33, 151, 'same'),
+                    BusCoordinateTests().feature(-34, 152, 'same')]
+        with patch.object(buses, 'fetch_bus_data', return_value={'features': features}), patch.object(buses.helpers, 'bulk') as bulk, patch.object(buses, 'es') as client:
+            buses.index_bus_data()
+        bulk.assert_not_called()
+        client.delete_by_query.assert_not_called()
+
+    def test_complete_distinct_vehicles_are_written_before_cleanup(self):
+        features = [BusCoordinateTests().feature(-33, 151, 'one'),
+                    BusCoordinateTests().feature(-34, 152, 'two')]
+        with patch.object(buses, 'fetch_bus_data', return_value={'features': features}), patch.object(buses.helpers, 'bulk') as bulk, patch.object(buses, 'es') as client:
+            buses.index_bus_data()
+        self.assertEqual([a['_id'] for a in bulk.call_args.args[1]], ['one', 'two'])
+        client.delete_by_query.assert_called_once()

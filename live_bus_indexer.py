@@ -265,8 +265,11 @@ def index_bus_data():
     logger.info("Transforming bus data...")
     actions = transform_bus_data(data)
     
-    if not actions:
-        logger.warning("No valid bus data to index.")
+    features = data.get('features') if isinstance(data, dict) else None
+    if (not isinstance(features, list) or not actions
+            or len(actions) != len(features)
+            or len({action['_id'] for action in actions}) != len(actions)):
+        logger.warning("Discarding refresh: every fetched record must transform to a distinct vehicle")
         return
     
     try:
