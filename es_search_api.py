@@ -30,8 +30,8 @@ def search_building_complex_points():
         # Perform the search
         response = es.search(index="building_complex_points", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/pedestrian_counts', methods=['GET'])
 def search_pedestrian_counts():
@@ -54,8 +54,8 @@ def search_pedestrian_counts():
         # Perform the search
         response = es.search(index="pedestrian_counts", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/height_of_building', methods=['GET'])
 def search_height_of_building():
@@ -78,8 +78,8 @@ def search_height_of_building():
         # Perform the search
         response = es.search(index="height_of_building", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/stairs', methods=['GET'])
 def search_stairs():
@@ -102,8 +102,8 @@ def search_stairs():
         # Perform the search
         response = es.search(index="stairs", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/recreation_centres', methods=['GET'])
 def search_recreation_centres():
@@ -126,8 +126,8 @@ def search_recreation_centres():
         # Perform the search
         response = es.search(index="recreation_centres", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/information_kiosks', methods=['GET'])
 def search_information_kiosks():
@@ -150,8 +150,8 @@ def search_information_kiosks():
         # Perform the search
         response = es.search(index="information_kiosks", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/ambulance_stations', methods=['GET'])
 def search_ambulance_stations():
@@ -174,8 +174,8 @@ def search_ambulance_stations():
         # Perform the search
         response = es.search(index="ambulance_stations", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/bicycle_network', methods=['GET'])
 def search_bicycle_network():
@@ -198,8 +198,8 @@ def search_bicycle_network():
         # Perform the search
         response = es.search(index="bicycle_network", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/free_15_minute_parking', methods=['GET'])
 def search_free_15_minute_parking():
@@ -222,8 +222,8 @@ def search_free_15_minute_parking():
         # Perform the search
         response = es.search(index="free_15_minute_parking", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/residential_waste_recovery', methods=['GET'])
 def search_residential_waste_recovery():
@@ -245,8 +245,8 @@ def search_residential_waste_recovery():
         # Perform the search
         response = es.search(index="residential_waste_recovery", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/business_rate_category', methods=['GET'])
 def search_business_rate_category():
@@ -269,8 +269,8 @@ def search_business_rate_category():
         # Perform the search
         response = es.search(index="business_rate_category", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/ucl', methods=['GET'])
 def search_ucl():
@@ -300,8 +300,8 @@ def search_ucl():
         # Perform the search
         response = es.search(index="ucl", body=search_body, size=10000)  # Adjust size as needed
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 
 @app.route('/es_search/ticket_parking_rates', methods=['GET'])
@@ -330,8 +330,8 @@ def search_ticket_parking_rates():
         # Perform the search
         response = es.search(index="ticket_parking_rates", body=search_body, size=10000)  # Adjust size as needed
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
     
 @app.route('/es_search/parking_permits_areas', methods=['GET'])
 def search_parking_permits_areas():
@@ -359,8 +359,8 @@ def search_parking_permits_areas():
     try:
         response = es.search(index="parking_permits_areas", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/lga_ndd_total', methods=['GET'])
 def search_lga_ndd_total():
@@ -399,8 +399,8 @@ def search_lga_ndd_total():
                 "coordinates": geom.get("coordinates")
             })
         return jsonify(results), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/dzn', methods=['GET'])
 def search_dzn():
@@ -440,8 +440,8 @@ def search_dzn():
                 "coordinates": geom.get("coordinates")
             })
         return jsonify(results), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 @app.route('/es_search/library_details/has_feature', methods=['GET'])
 def search_library_details_has_feature():
@@ -460,12 +460,12 @@ def search_library_details_has_feature():
     try:
         response = es.search(index="library_details", body=search_body)
         return jsonify(response['hits']['hits']), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return jsonify({"error": "Search service unavailable"}), 500
 
 
 
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5003, debug=True)
+    app.run(host='0.0.0.0', port=5003, debug=False)
