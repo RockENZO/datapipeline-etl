@@ -41,6 +41,10 @@ curl 'http://localhost:5001/search?address=95%20Balo%20Street&state=NSW&async=tr
 
 Synchronous search returns a JSON array, 400 for invalid input, 504 for timeout, or 503 for unavailable dependencies. Async search returns 202 and a task identifier; `/results/<task_id>` returns 200 when complete, 503 on failure, or 202 while pending/unknown. Results expire after one hour. Searches return at most 100 rows. Multiword street names and optional street numbers are supported; this is substring search, not a postal address parser.
 
+## Dataset search API
+
+The separate service on port 5003 exposes `/es_search/<dataset>` routes. Backend failures return HTTP 500 with `{"error":"Search service unavailable"}`; exception details, internal URLs and backend response bodies are not returned to clients. Successful hit/geometry arrays and existing input-validation responses are unchanged. The direct Python entry point disables Flask's interactive debugger. This remains an unauthenticated development service; disabling debugging does not make it suitable for public exposure.
+
 ## Real data inputs
 
 Place the eleven filenames listed in `make_demo_data.py` under `data/`, using the original source GeoJSON exports and the indicated wrapper structure. The demo generator refuses to overwrite existing files. Synthetic data is for exercising the application, not evidence of infrastructure coverage or ETL throughput. Original city data acquisition, licensing and freshness must be documented for a real-data deployment.
