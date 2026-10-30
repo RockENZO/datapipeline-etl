@@ -69,6 +69,7 @@ The address integration stack uses a two-row synthetic PostgreSQL fixture and a 
 
 - `es_index_multi_docker.py`: validates required supplied inputs, transforms geometry and bulk indexes; failures exit nonzero.
 - `web_map/app.py`: map, bounded searches, GeoJSON response and dependency health.
+- `es_search_api.py`: immutable dataset-query registry, shared request/response boundary; [preserved search contracts](docs/SEARCH_API.md).
 - `GNAF_search_api.py`: validated address requests, bounded synchronous wait and asynchronous polling.
 - `docker-compose.yml`: map, Elasticsearch, address API, worker, Redis, GNAF database and optional live bus indexing.
 - `compose.test.yml`: reproducible address integration fixture.

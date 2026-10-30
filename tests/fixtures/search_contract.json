@@ -1,0 +1,3121 @@
+{
+  "baseline_sha": "9f7848be262c89b1538997a56409db3ac50482d9",
+  "purpose": "Characterization of the reviewed HTTP/query contract with a synthetic backend response; not live city data",
+  "backend_hit": {
+    "_id": "fixture",
+    "_source": {
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          151,
+          -33
+        ]
+      },
+      "properties": {
+        "Name": "synthetic fixture"
+      }
+    }
+  },
+  "cases": [
+    {
+      "path": "/es_search/building_complex_points",
+      "query": {},
+      "endpoint": "search_building_complex_points",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/building_complex_points",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_building_complex_points",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "building_complex_points",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.generalname",
+                    "properties.street_name"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/building_complex_points",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_building_complex_points",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "building_complex_points",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.generalname",
+                    "properties.street_name"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/building_complex_points",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_building_complex_points",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/building_complex_points",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_building_complex_points",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "building_complex_points",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.generalname",
+                    "properties.street_name"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/building_complex_points",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_building_complex_points",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/pedestrian_counts",
+      "query": {},
+      "endpoint": "search_pedestrian_counts",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/pedestrian_counts",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_pedestrian_counts",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "pedestrian_counts",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "location_name",
+                    "location_code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/pedestrian_counts",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_pedestrian_counts",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "pedestrian_counts",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "location_name",
+                    "location_code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/pedestrian_counts",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_pedestrian_counts",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/pedestrian_counts",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_pedestrian_counts",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "pedestrian_counts",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "location_name",
+                    "location_code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/pedestrian_counts",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_pedestrian_counts",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/height_of_building",
+      "query": {},
+      "endpoint": "search_height_of_building",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/height_of_building",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_height_of_building",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "height_of_building",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.EPI_NAME",
+                    "properties.LGA_NAME",
+                    "properties.MAP_NAME"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/height_of_building",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_height_of_building",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "height_of_building",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.EPI_NAME",
+                    "properties.LGA_NAME",
+                    "properties.MAP_NAME"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/height_of_building",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_height_of_building",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/height_of_building",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_height_of_building",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "height_of_building",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.EPI_NAME",
+                    "properties.LGA_NAME",
+                    "properties.MAP_NAME"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/height_of_building",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_height_of_building",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/stairs",
+      "query": {},
+      "endpoint": "search_stairs",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/stairs",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_stairs",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "stairs",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.Name",
+                    "properties.Address",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/stairs",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_stairs",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "stairs",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.Name",
+                    "properties.Address",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/stairs",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_stairs",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/stairs",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_stairs",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "stairs",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.Name",
+                    "properties.Address",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/stairs",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_stairs",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/recreation_centres",
+      "query": {},
+      "endpoint": "search_recreation_centres",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/recreation_centres",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_recreation_centres",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "recreation_centres",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.Name",
+                    "properties.Address",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/recreation_centres",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_recreation_centres",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "recreation_centres",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.Name",
+                    "properties.Address",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/recreation_centres",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_recreation_centres",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/recreation_centres",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_recreation_centres",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "recreation_centres",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.Name",
+                    "properties.Address",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/recreation_centres",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_recreation_centres",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/information_kiosks",
+      "query": {},
+      "endpoint": "search_information_kiosks",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/information_kiosks",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_information_kiosks",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "information_kiosks",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.CentreName",
+                    "properties.StreetAddress",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/information_kiosks",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_information_kiosks",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "information_kiosks",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.CentreName",
+                    "properties.StreetAddress",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/information_kiosks",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_information_kiosks",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/information_kiosks",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_information_kiosks",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "information_kiosks",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.CentreName",
+                    "properties.StreetAddress",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/information_kiosks",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_information_kiosks",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/ambulance_stations",
+      "query": {},
+      "endpoint": "search_ambulance_stations",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/ambulance_stations",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_ambulance_stations",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ambulance_stations",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.generalname",
+                    "properties.urbanity"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ambulance_stations",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_ambulance_stations",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ambulance_stations",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.generalname",
+                    "properties.urbanity"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ambulance_stations",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_ambulance_stations",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/ambulance_stations",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_ambulance_stations",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ambulance_stations",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.generalname",
+                    "properties.urbanity"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ambulance_stations",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_ambulance_stations",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/bicycle_network",
+      "query": {},
+      "endpoint": "search_bicycle_network",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/bicycle_network",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_bicycle_network",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "bicycle_network",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.name",
+                    "properties.region",
+                    "properties.lga",
+                    "properties.facility"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/bicycle_network",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_bicycle_network",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "bicycle_network",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.name",
+                    "properties.region",
+                    "properties.lga",
+                    "properties.facility"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/bicycle_network",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_bicycle_network",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/bicycle_network",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_bicycle_network",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "bicycle_network",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.name",
+                    "properties.region",
+                    "properties.lga",
+                    "properties.facility"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/bicycle_network",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_bicycle_network",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/free_15_minute_parking",
+      "query": {},
+      "endpoint": "search_free_15_minute_parking",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/free_15_minute_parking",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_free_15_minute_parking",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "free_15_minute_parking",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.Street",
+                    "properties.Section",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/free_15_minute_parking",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_free_15_minute_parking",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "free_15_minute_parking",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.Street",
+                    "properties.Section",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/free_15_minute_parking",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_free_15_minute_parking",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/free_15_minute_parking",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_free_15_minute_parking",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "free_15_minute_parking",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.Street",
+                    "properties.Section",
+                    "properties.Suburb"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/free_15_minute_parking",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_free_15_minute_parking",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/residential_waste_recovery",
+      "query": {},
+      "endpoint": "search_residential_waste_recovery",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/residential_waste_recovery",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_residential_waste_recovery",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "residential_waste_recovery",
+            "body": {
+              "query": {
+                "match": {
+                  "properties.All_": "Central"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/residential_waste_recovery",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_residential_waste_recovery",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "residential_waste_recovery",
+            "body": {
+              "query": {
+                "match": {
+                  "properties.All_": " Central "
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/residential_waste_recovery",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_residential_waste_recovery",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/residential_waste_recovery",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_residential_waste_recovery",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "residential_waste_recovery",
+            "body": {
+              "query": {
+                "match": {
+                  "properties.All_": "Central"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/residential_waste_recovery",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_residential_waste_recovery",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/business_rate_category",
+      "query": {},
+      "endpoint": "search_business_rate_category",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/business_rate_category",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_business_rate_category",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "business_rate_category",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.BUS_VALUE"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/business_rate_category",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_business_rate_category",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "business_rate_category",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.BUS_VALUE"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/business_rate_category",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_business_rate_category",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/business_rate_category",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_business_rate_category",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "business_rate_category",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.BUS_VALUE"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/business_rate_category",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_business_rate_category",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/ucl",
+      "query": {},
+      "endpoint": "search_ucl",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ucl",
+            "body": {
+              "_source": [
+                "geometry"
+              ],
+              "query": {
+                "match_all": {}
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ucl",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_ucl",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ucl",
+            "body": {
+              "_source": [
+                "geometry"
+              ],
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.ucl_name_2021",
+                    "properties.state_name_2021"
+                  ]
+                }
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ucl",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_ucl",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ucl",
+            "body": {
+              "_source": [
+                "geometry"
+              ],
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.ucl_name_2021",
+                    "properties.state_name_2021"
+                  ]
+                }
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ucl",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_ucl",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ucl",
+            "body": {
+              "_source": [
+                "geometry"
+              ],
+              "query": {
+                "match_all": {}
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ucl",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_ucl",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ucl",
+            "body": {
+              "_source": [
+                "geometry"
+              ],
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.ucl_name_2021",
+                    "properties.state_name_2021"
+                  ]
+                }
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ucl",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_ucl",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ucl",
+            "body": {
+              "_source": [
+                "geometry"
+              ],
+              "query": {
+                "match_all": {}
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ticket_parking_rates",
+      "query": {},
+      "endpoint": "search_ticket_parking_rates",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ticket_parking_rates",
+            "body": {
+              "query": {
+                "match_all": {}
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ticket_parking_rates",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_ticket_parking_rates",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ticket_parking_rates",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.PlanYear",
+                    "properties.Tariff1",
+                    "properties.Tariff2"
+                  ]
+                }
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ticket_parking_rates",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_ticket_parking_rates",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ticket_parking_rates",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.PlanYear",
+                    "properties.Tariff1",
+                    "properties.Tariff2"
+                  ]
+                }
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ticket_parking_rates",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_ticket_parking_rates",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ticket_parking_rates",
+            "body": {
+              "query": {
+                "match_all": {}
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ticket_parking_rates",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_ticket_parking_rates",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ticket_parking_rates",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.PlanYear",
+                    "properties.Tariff1",
+                    "properties.Tariff2"
+                  ]
+                }
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/ticket_parking_rates",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_ticket_parking_rates",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "ticket_parking_rates",
+            "body": {
+              "query": {
+                "match_all": {}
+              }
+            },
+            "size": 10000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/parking_permits_areas",
+      "query": {},
+      "endpoint": "search_parking_permits_areas",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/parking_permits_areas",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_parking_permits_areas",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "parking_permits_areas",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.Label",
+                    "properties.Label_2",
+                    "properties.Precinct",
+                    "properties.BusinessEligible",
+                    "properties.VisitorEligible",
+                    "properties.ResidentialEligible"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/parking_permits_areas",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_parking_permits_areas",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "parking_permits_areas",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.Label",
+                    "properties.Label_2",
+                    "properties.Precinct",
+                    "properties.BusinessEligible",
+                    "properties.VisitorEligible",
+                    "properties.ResidentialEligible"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/parking_permits_areas",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_parking_permits_areas",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/parking_permits_areas",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_parking_permits_areas",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "parking_permits_areas",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.Label",
+                    "properties.Label_2",
+                    "properties.Precinct",
+                    "properties.BusinessEligible",
+                    "properties.VisitorEligible",
+                    "properties.ResidentialEligible"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/parking_permits_areas",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_parking_permits_areas",
+      "status": 400,
+      "body": {
+        "error": "Query parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/lga_ndd_total",
+      "query": {},
+      "endpoint": "search_lga_ndd_total",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "lga_ndd_total",
+            "body": {
+              "query": {
+                "match_all": {}
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/lga_ndd_total",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_lga_ndd_total",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "lga_ndd_total",
+            "body": {
+              "query": {
+                "match": {
+                  "properties.fid": "Central"
+                }
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/lga_ndd_total",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_lga_ndd_total",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "lga_ndd_total",
+            "body": {
+              "query": {
+                "match": {
+                  "properties.fid": " Central "
+                }
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/lga_ndd_total",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_lga_ndd_total",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "lga_ndd_total",
+            "body": {
+              "query": {
+                "term": {
+                  "geometry.type.keyword": "Point"
+                }
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/lga_ndd_total",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_lga_ndd_total",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "lga_ndd_total",
+            "body": {
+              "query": {
+                "term": {
+                  "geometry.type.keyword": "Point"
+                }
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/lga_ndd_total",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_lga_ndd_total",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "lga_ndd_total",
+            "body": {
+              "query": {
+                "match_all": {}
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/dzn",
+      "query": {},
+      "endpoint": "search_dzn",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "dzn",
+            "body": {
+              "query": {
+                "match_all": {}
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/dzn",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_dzn",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "dzn",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": "Central",
+                  "fields": [
+                    "properties.dzn_code",
+                    "properties.sa2_name_2021"
+                  ]
+                }
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/dzn",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_dzn",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "dzn",
+            "body": {
+              "query": {
+                "multi_match": {
+                  "query": " Central ",
+                  "fields": [
+                    "properties.dzn_code",
+                    "properties.sa2_name_2021"
+                  ]
+                }
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/dzn",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_dzn",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "dzn",
+            "body": {
+              "query": {
+                "match": {
+                  "geometry.type": "Point"
+                }
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/dzn",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_dzn",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "dzn",
+            "body": {
+              "query": {
+                "match": {
+                  "geometry.type": "Point"
+                }
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/dzn",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_dzn",
+      "status": 200,
+      "body": [
+        {
+          "coordinates": [
+            151,
+            -33
+          ],
+          "type": "Point"
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "dzn",
+            "body": {
+              "query": {
+                "match_all": {}
+              }
+            },
+            "size": 1000
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/library_details/has_feature",
+      "query": {},
+      "endpoint": "search_library_details_has_feature",
+      "status": 400,
+      "body": {
+        "error": "Field parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/library_details/has_feature",
+      "query": {
+        "query": "Central"
+      },
+      "endpoint": "search_library_details_has_feature",
+      "status": 400,
+      "body": {
+        "error": "Field parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/library_details/has_feature",
+      "query": {
+        "query": " Central "
+      },
+      "endpoint": "search_library_details_has_feature",
+      "status": 400,
+      "body": {
+        "error": "Field parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/library_details/has_feature",
+      "query": {
+        "query": "",
+        "type": "Point"
+      },
+      "endpoint": "search_library_details_has_feature",
+      "status": 400,
+      "body": {
+        "error": "Field parameter is required"
+      },
+      "backend_calls": []
+    },
+    {
+      "path": "/es_search/library_details/has_feature",
+      "query": {
+        "query": "Central",
+        "type": "Point",
+        "field": "Name"
+      },
+      "endpoint": "search_library_details_has_feature",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "library_details",
+            "body": {
+              "query": {
+                "exists": {
+                  "field": "properties.Name"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/es_search/library_details/has_feature",
+      "query": {
+        "field": "Name"
+      },
+      "endpoint": "search_library_details_has_feature",
+      "status": 200,
+      "body": [
+        {
+          "_id": "fixture",
+          "_source": {
+            "geometry": {
+              "coordinates": [
+                151,
+                -33
+              ],
+              "type": "Point"
+            },
+            "properties": {
+              "Name": "synthetic fixture"
+            }
+          }
+        }
+      ],
+      "backend_calls": [
+        {
+          "args": [],
+          "kwargs": {
+            "index": "library_details",
+            "body": {
+              "query": {
+                "exists": {
+                  "field": "properties.Name"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
