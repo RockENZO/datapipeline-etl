@@ -1,471 +1,105 @@
-from flask import Flask, request, jsonify
-from elasticsearch import Elasticsearch
+"""Dataset search HTTP contracts backed by an immutable query registry."""
+from dataclasses import dataclass
+from functools import partial
 import os
 
-# Initialize Flask app
+from flask import Flask, request, jsonify
+from elasticsearch import Elasticsearch
+
 app = Flask(__name__)
-
-# Elasticsearch client
-es_host = os.getenv('ELASTICSEARCH_HOST', 'localhost')
-es = Elasticsearch(hosts=[f"http://{es_host}:9200"])
-
-@app.route('/es_search/building_complex_points', methods=['GET'])
-def search_building_complex_points():
-    """Search in the building_complex_points index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    # Define the search query
-    search_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-                "fields": ["properties.generalname", "properties.street_name"]
-            }
-        }
-    }
-
-    try:
-        # Perform the search
-        response = es.search(index="building_complex_points", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/pedestrian_counts', methods=['GET'])
-def search_pedestrian_counts():
-    """Search in the pedestrian_counts index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    # Define the search query
-    search_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-                "fields": ["location_name", "location_code"]
-            }
-        }
-    }
-
-    try:
-        # Perform the search
-        response = es.search(index="pedestrian_counts", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/height_of_building', methods=['GET'])
-def search_height_of_building():
-    """Search in the height_of_building index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    # Define the search query
-    search_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-                "fields": ["properties.EPI_NAME", "properties.LGA_NAME", "properties.MAP_NAME"]
-            }
-        }
-    }
-
-    try:
-        # Perform the search
-        response = es.search(index="height_of_building", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/stairs', methods=['GET'])
-def search_stairs():
-    """Search in the stairs index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    # Define the search query
-    search_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-                "fields": ["properties.Name", "properties.Address", "properties.Suburb"]
-            }
-        }
-    }
-
-    try:
-        # Perform the search
-        response = es.search(index="stairs", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/recreation_centres', methods=['GET'])
-def search_recreation_centres():
-    """Search in the recreation_centres index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    # Define the search query
-    search_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-                "fields": ["properties.Name", "properties.Address", "properties.Suburb"]
-            }
-        }
-    }
-
-    try:
-        # Perform the search
-        response = es.search(index="recreation_centres", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/information_kiosks', methods=['GET'])
-def search_information_kiosks():
-    """Search in the information_kiosks index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    # Define the search query
-    search_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-                "fields": ["properties.CentreName", "properties.StreetAddress", "properties.Suburb"]
-            }
-        }
-    }
-
-    try:
-        # Perform the search
-        response = es.search(index="information_kiosks", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/ambulance_stations', methods=['GET'])
-def search_ambulance_stations():
-    """Search in the ambulance_stations index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    # Define the search query
-    search_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-                "fields": ["properties.generalname", "properties.urbanity"]
-            }
-        }
-    }
-
-    try:
-        # Perform the search
-        response = es.search(index="ambulance_stations", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/bicycle_network', methods=['GET'])
-def search_bicycle_network():
-    """Search in the bicycle_network index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    # Define the search query
-    search_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-                "fields": ["properties.name", "properties.region", "properties.lga", "properties.facility"]
-            }
-        }
-    }
-
-    try:
-        # Perform the search
-        response = es.search(index="bicycle_network", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/free_15_minute_parking', methods=['GET'])
-def search_free_15_minute_parking():
-    """Search in the free_15_minute_parking index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    # Define the search query
-    search_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-                "fields": ["properties.Street", "properties.Section", "properties.Suburb"]
-            }
-        }
-    }
-
-    try:
-        # Perform the search
-        response = es.search(index="free_15_minute_parking", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/residential_waste_recovery', methods=['GET'])
-def search_residential_waste_recovery():
-    """Search in the residential_waste_recovery index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    # Define the search query
-    search_body = {
-        "query": {
-            "match": {
-                "properties.All_": query  # Match the query against the All_ field
-            }
-        }
-    }
-
-    try:
-        # Perform the search
-        response = es.search(index="residential_waste_recovery", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/business_rate_category', methods=['GET'])
-def search_business_rate_category():
-    """Search in the business_rate_category index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
-
-    # Define the search query
-    search_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-                "fields": ["properties.BUS_VALUE"]  # Match the correct field name
-            }
-        }
-    }
-
-    try:
-        # Perform the search
-        response = es.search(index="business_rate_category", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/ucl', methods=['GET'])
-def search_ucl():
-    """Search in the UCL index and return geometry data."""
-    query = request.args.get('query')
-
-    # Define the search query
-    if not query:
-        search_body = {
-            "_source": ["geometry"],  # Include only the geometry field
-            "query": {
-                "match_all": {}
-            }
-        }
-    else:
-        search_body = {
-            "_source": ["geometry"],  # Include only the geometry field
-            "query": {
-                "multi_match": {
-                    "query": query,
-                    "fields": ["properties.ucl_name_2021", "properties.state_name_2021"]
-                }
-            }
-        }
-
-    try:
-        # Perform the search
-        response = es.search(index="ucl", body=search_body, size=10000)  # Adjust size as needed
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
+es = Elasticsearch(hosts=[f"http://{os.getenv('ELASTICSEARCH_HOST', 'localhost')}:9200"])
 
 
-@app.route('/es_search/ticket_parking_rates', methods=['GET'])
-def search_ticket_parking_rates():
-    """Search in the ticket_parking_rates index."""
-    query = request.args.get('query')
+@dataclass(frozen=True)
+class SearchSpec:
+    index: str
+    fields: tuple[str, ...] = ()
+    mode: str = 'multi_match'
+    optional_query: bool = False
+    size: int | None = None
+    source: tuple[str, ...] = ()
+    geometry_filter: tuple[str, str] | None = None
+    geometry_only: bool = False
+    suffix: str = ''
 
-    # Define the search query
-    if not query:
-        search_body = {
-            "query": {
-                "match_all": {}
-            }
-        }
-    else:
-        search_body = {
-            "query": {
-                "multi_match": {
-                    "query": query,
-                    "fields": ["properties.PlanYear", "properties.Tariff1", "properties.Tariff2"]
-                }
-            }
-        }
 
-    try:
-        # Perform the search
-        response = es.search(index="ticket_parking_rates", body=search_body, size=10000)  # Adjust size as needed
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-    
-@app.route('/es_search/parking_permits_areas', methods=['GET'])
-def search_parking_permits_areas():
-    """Search in the parking_permits_areas index."""
-    query = request.args.get('query')
-    if not query:
-        return jsonify({"error": "Query parameter is required"}), 400
+SEARCHES = (
+    SearchSpec('building_complex_points', ('properties.generalname', 'properties.street_name')),
+    SearchSpec('pedestrian_counts', ('location_name', 'location_code')),
+    SearchSpec('height_of_building', ('properties.EPI_NAME', 'properties.LGA_NAME', 'properties.MAP_NAME')),
+    SearchSpec('stairs', ('properties.Name', 'properties.Address', 'properties.Suburb')),
+    SearchSpec('recreation_centres', ('properties.Name', 'properties.Address', 'properties.Suburb')),
+    SearchSpec('information_kiosks', ('properties.CentreName', 'properties.StreetAddress', 'properties.Suburb')),
+    SearchSpec('ambulance_stations', ('properties.generalname', 'properties.urbanity')),
+    SearchSpec('bicycle_network', ('properties.name', 'properties.region', 'properties.lga', 'properties.facility')),
+    SearchSpec('free_15_minute_parking', ('properties.Street', 'properties.Section', 'properties.Suburb')),
+    SearchSpec('residential_waste_recovery', ('properties.All_',), mode='match'),
+    SearchSpec('business_rate_category', ('properties.BUS_VALUE',)),
+    SearchSpec('ucl', ('properties.ucl_name_2021', 'properties.state_name_2021'),
+               optional_query=True, size=10000, source=('geometry',)),
+    SearchSpec('ticket_parking_rates', ('properties.PlanYear', 'properties.Tariff1', 'properties.Tariff2'),
+               optional_query=True, size=10000),
+    SearchSpec('parking_permits_areas', ('properties.Label', 'properties.Label_2', 'properties.Precinct',
+               'properties.BusinessEligible', 'properties.VisitorEligible', 'properties.ResidentialEligible')),
+    SearchSpec('lga_ndd_total', ('properties.fid',), mode='match', optional_query=True, size=1000,
+               geometry_filter=('term', 'geometry.type.keyword'), geometry_only=True),
+    SearchSpec('dzn', ('properties.dzn_code', 'properties.sa2_name_2021'), optional_query=True, size=1000,
+               geometry_filter=('match', 'geometry.type'), geometry_only=True),
+    SearchSpec('library_details', mode='exists', suffix='/has_feature'),
+)
 
-    search_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-                "fields": [
-                    "properties.Label",
-                    "properties.Label_2",
-                    "properties.Precinct",
-                    "properties.BusinessEligible",
-                    "properties.VisitorEligible",
-                    "properties.ResidentialEligible"
-                ]
-            }
-        }
-    }
 
-    try:
-        response = es.search(index="parking_permits_areas", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
+class InvalidSearch(ValueError):
+    """Controlled client validation errors; never wrap backend exception text."""
 
-@app.route('/es_search/lga_ndd_total', methods=['GET'])
-def search_lga_ndd_total():
-    geom_type = request.args.get('type')
-    query = request.args.get('query')
 
-    # Build the search query
-    if geom_type:
-        search_body = {
-            "query": {
-                "term": {
-                    "geometry.type.keyword": geom_type  # Filter by geometry type
-                }
-            }
-        }
+def build_query(spec, args):
+    query = args.get('query')
+    geom_type = args.get('type')
+    if spec.mode == 'exists':
+        field = args.get('field')
+        if not field:
+            raise InvalidSearch('Field parameter is required')
+        clause = {'exists': {'field': f'properties.{field}'}}
+    elif spec.geometry_filter and geom_type:
+        kind, field = spec.geometry_filter
+        clause = {kind: {field: geom_type}}
     elif not query:
-        search_body = { "query": { "match_all": {} } }
+        if not spec.optional_query:
+            raise InvalidSearch('Query parameter is required')
+        clause = {'match_all': {}}
+    elif spec.mode == 'match':
+        clause = {'match': {spec.fields[0]: query}}
     else:
-        # Example: search by fid if you want to support property queries
-        search_body = {
-            "query": {
-                "match": {
-                    "properties.fid": query
-                }
-            }
-        }
+        clause = {'multi_match': {'query': query, 'fields': list(spec.fields)}}
+    body = {'query': clause}
+    if spec.source:
+        body['_source'] = list(spec.source)
+    return body
 
+
+def search_dataset(spec):
     try:
-        response = es.search(index="lga_ndd_total", body=search_body, size=1000)
-        # Return only geometry type and coordinates
-        results = []
-        for hit in response['hits']['hits']:
-            geom = hit['_source']['geometry']
-            results.append({
-                "type": geom.get("type"),
-                "coordinates": geom.get("coordinates")
-            })
-        return jsonify(results), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/dzn', methods=['GET'])
-def search_dzn():
-    geom_type = request.args.get('type')
-    query = request.args.get('query')
-
-    if geom_type:
-        search_body = {
-            "query": {
-                "match": {
-                    "geometry.type": geom_type
-                }
-            }
-        }
-    elif not query:
-        search_body = { "query": { "match_all": {} } }
-    else:
-        search_body = {
-            "query": {
-                "multi_match": {
-                    "query": query,
-                    "fields": [
-                        "properties.dzn_code",
-                        "properties.sa2_name_2021" 
-                    ]
-                }
-            }
-        }
-
+        body = build_query(spec, request.args)
+    except InvalidSearch as error:
+        return jsonify({'error': str(error)}), 400
+    options = {'size': spec.size} if spec.size is not None else {}
     try:
-        response = es.search(index="dzn", body=search_body, size=1000)
-        results = []
-        for hit in response['hits']['hits']:
-            geom = hit['_source']['geometry']
-            results.append({
-                "type": geom.get("type"),
-                "coordinates": geom.get("coordinates")
-            })
-        return jsonify(results), 200
+        response = es.search(index=spec.index, body=body, **options)
+        hits = response['hits']['hits']
+        if spec.geometry_only:
+            hits = [{'type': hit['_source']['geometry'].get('type'),
+                     'coordinates': hit['_source']['geometry'].get('coordinates')} for hit in hits]
+        return jsonify(hits), 200
     except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
-
-@app.route('/es_search/library_details/has_feature', methods=['GET'])
-def search_library_details_has_feature():
-    field = request.args.get('field')
-    if not field:
-        return jsonify({"error": "Field parameter is required"}), 400
-
-    search_body = {
-        "query": {
-            "exists": {
-                "field": f"properties.{field}"
-            }
-        }
-    }
-
-    try:
-        response = es.search(index="library_details", body=search_body)
-        return jsonify(response['hits']['hits']), 200
-    except Exception:
-        return jsonify({"error": "Search service unavailable"}), 500
+        return jsonify({'error': 'Search service unavailable'}), 500
 
 
-
-
+# Keep the literal URL set and Flask endpoint names; unknown datasets remain 404.
+for spec in SEARCHES:
+    path = spec.index + spec.suffix
+    app.add_url_rule('/es_search/' + path, endpoint='search_' + path.replace('/', '_'),
+                     view_func=partial(search_dataset, spec), methods=['GET'])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=False)
