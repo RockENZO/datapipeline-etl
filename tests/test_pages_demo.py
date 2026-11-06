@@ -1,6 +1,7 @@
 import json
 import shutil
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -46,21 +47,36 @@ class StaticDemoTests(unittest.TestCase):
         self.assertIn("not synthetic", readme.lower())
 
     def test_pages_build_includes_shared_escape_helper(self):
-        out = ROOT / "_site_test"
-        try:
+        with tempfile.TemporaryDirectory() as folder:
+            out = Path(folder) / "nested" / "site"
             subprocess.run([str(ROOT / "tools/build_pages.sh"), str(out)], check=True, capture_output=True)
             self.assertTrue((out / "index.html").is_file())
             self.assertTrue((out / "popup_safety.js").is_file())
             self.assertTrue((out / ".nojekyll").is_file())
-        finally:
-            shutil.rmtree(out, ignore_errors=True)
+
+    def test_pages_build_refuses_an_existing_output_path(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            out = root / "existing"
+            out.mkdir()
+            sentinel = out / "keep.txt"
+            sentinel.write_text("keep")
+            link = root / "symlink"
+            link.symlink_to(out, target_is_directory=True)
+
+            for destination in (out, link):
+                with self.subTest(destination=destination):
+                    result = subprocess.run([str(ROOT / "tools/build_pages.sh"), str(destination)],
+                                            text=True, capture_output=True)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertEqual(sentinel.read_text(), "keep")
+                    self.assertTrue(link.is_symlink())
 
 
 class IndexerRealDataTests(unittest.TestCase):
     """Behaviours the real Knia-data-repo exports require of the indexer."""
 
     def _index(self, name, payload, data_path=None):
-        import tempfile
         from unittest.mock import Mock, patch
         import es_index_multi_docker as indexer
         with tempfile.TemporaryDirectory() as tmp:
