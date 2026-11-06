@@ -7,7 +7,8 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install flask==3.1.3 psycopg2-binary==2.9.13 celery==5.3.4 redis==5.0.1
+# Kombu's Redis extra installs packaging and requires redis-py >= 6.4.
+RUN pip install flask==3.1.3 psycopg2-binary==2.9.13 celery==5.3.4 kombu[redis]==5.7.0 redis==6.4.0
 
 COPY GNAF_search_api.py .
 COPY celery_config.py .

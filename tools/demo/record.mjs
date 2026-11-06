@@ -13,8 +13,8 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const site = path.join(root, '_site');
 const work = fs.mkdtempSync(path.join(process.env.TMPDIR || '/tmp', 'demo-rec-'));
+const site = path.join(work, 'site');
 execFileSync(path.join(root, 'tools/build_pages.sh'), [site], { stdio: 'inherit' });
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.geojson': 'application/json' };
