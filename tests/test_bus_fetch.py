@@ -48,6 +48,31 @@ class CompleteBusFetchTests(unittest.TestCase):
         bulk.assert_not_called()
         client.delete_by_query.assert_not_called()
 
+    def test_late_response_does_not_write_or_delete(self):
+        replies = [
+            response({'objectIdFieldName': 'hashId', 'objectIds': [1]}),
+            response(batch(1)),
+        ]
+        clock = Mock(return_value=0)
+
+        def finish_last_response():
+            clock.return_value = 121
+            return batch(1)
+
+        replies[-1].json.side_effect = finish_last_response
+
+        with (
+            patch.object(buses.time, 'monotonic', clock),
+            patch.object(buses.requests, 'get', side_effect=replies),
+            patch.object(buses, 'transform_bus_data', return_value=[{'_id': 'bus'}]),
+            patch.object(buses.helpers, 'bulk') as bulk,
+            patch.object(buses, 'es') as client,
+        ):
+            buses.index_bus_data()
+
+        bulk.assert_not_called()
+        client.delete_by_query.assert_not_called()
+
     def test_rejects_malformed_or_oversized_id_enumeration(self):
         for ids in [None, '1,2', [True], [1, 1], ['1'], list(range(10001))]:
             with self.subTest(ids=str(ids)[:50]), patch.object(buses.requests, 'get', return_value=response({'objectIdFieldName': 'hashId', 'objectIds': ids})) as get:

@@ -147,6 +147,8 @@ def fetch_bus_data():
             if len(returned) != len(requested) or set(returned) != set(requested):
                 raise ValueError("Bus page contains missing, duplicate or unexpected IDs")
             features.extend(rows)
+        if time.monotonic() >= deadline:
+            raise ValueError("Bus refresh exceeded its 120-second request budget")
         logger.info("Fetched all %d enumerated bus records", len(features))
         return {'features': features, 'spatialReference': {'wkid': 4326}}
     except (requests.RequestException, ValueError, TypeError) as error:
