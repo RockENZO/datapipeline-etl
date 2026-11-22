@@ -63,9 +63,13 @@ def inside(geometry):
 
 def build(source, name, wrapper):
     raw = json.loads((source / name).read_text())
-    node = raw[wrapper] if wrapper else raw
+    node = raw.get(wrapper) if wrapper and isinstance(raw, dict) else raw
+    features = node.get('features') if isinstance(node, dict) else None
+    if not isinstance(features, list):
+        location = f"{name} ({wrapper})" if wrapper else name
+        raise ValueError(f"{location}: expected a features array")
     kept = []
-    for feature in node.get('features', []):
+    for feature in features:
         geometry = feature.get('geometry')
         if not inside(geometry):
             continue
@@ -78,7 +82,7 @@ def build(source, name, wrapper):
             geometry = {'type': geometry['type'], 'coordinates': rounded(geometry['coordinates'])}
         kept.append({'type': 'Feature', 'properties': props, 'geometry': geometry})
     collection = {'type': 'FeatureCollection', 'features': kept}
-    return {wrapper: collection} if wrapper else collection, len(node.get('features', [])), len(kept)
+    return {wrapper: collection} if wrapper else collection, len(features), len(kept)
 
 
 def main(argv):
@@ -86,11 +90,13 @@ def main(argv):
         sys.exit(__doc__)
     source = Path(argv[1])
     out = Path(argv[2]) if len(argv) > 2 else OUT
+    # Validate every input before replacing any generated demo file.
+    exports = [(name, *build(source, name, wrapper)) for name, wrapper in FILES]
     out.mkdir(parents=True, exist_ok=True)
-    for name, wrapper in FILES:
-        payload, before, after = build(source, name, wrapper)
-        (out / name).write_text(json.dumps(payload, separators=(',', ':'), ensure_ascii=False) + '\n')
-        print(f'{name}: {before} -> {after} features, {(out / name).stat().st_size / 1024:.0f} KB')
+    for name, payload, before, after in exports:
+        path = out / name
+        path.write_text(json.dumps(payload, separators=(',', ':'), ensure_ascii=False) + '\n')
+        print(f'{name}: {before} -> {after} features, {path.stat().st_size / 1024:.0f} KB')
 
 
 if __name__ == '__main__':
