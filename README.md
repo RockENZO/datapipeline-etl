@@ -10,6 +10,8 @@ Docker application that indexes user-supplied Sydney GeoJSON datasets into Elast
 
 Deploys come from `.github/workflows/pages.yml` on pushes to `main` that touch `demo/`. In the repository settings, set Pages to build from **GitHub Actions** (Settings > Pages > Source). Run it locally with `tools/build_pages.sh && python3 -m http.server -d _site`. The output directory must be new. To build again, choose a fresh path with `tools/build_pages.sh PATH` and serve that path. Re-record the GIF with `node tools/demo/record.mjs` (see [tools/demo](tools/demo/README.md)).
 
+The demo data generator checks each source file for a `features` array at the expected location before writing any output. If a source is missing or malformed, the previous exports are preserved.
+
 ![Map screenshot](data/demo_image.png)
 
 ## Run the map
