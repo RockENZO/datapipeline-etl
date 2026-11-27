@@ -44,7 +44,7 @@
     const liveAge = () => (live.newest ? Date.now() / 1000 - live.newest : 0);   // seconds since the newest bus position
 
     function busPopup(b) {
-        const rows = [['Route', b.route], ['Vehicle', b.label || b.plate], ['Speed', b.speed ? b.speed + ' km/h' : ''], ['Position time', b.ts ? new Date(b.ts * 1000).toLocaleTimeString() : '']]
+        const rows = [['Route', b.route], ['Vehicle', b.label || b.plate], ['Speed', b.speed != null ? b.speed + ' km/h' : ''], ['Position time', b.ts ? new Date(b.ts * 1000).toLocaleTimeString() : '']]
             .filter(([, v]) => v).map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd>`).join('');
         return `<div class="popup-kicker" style="color:${LIVE_COLOR}">Live bus</div><div class="popup-title">${escapeHtml(b.route ? 'Route ' + b.route : 'Bus ' + b.id)}</div><dl class="popup-info">${rows}</dl>`;
     }

@@ -17,18 +17,25 @@ es = Elasticsearch(hosts=[f"http://{es_host}:9200"])
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+SPEED_TEXT = re.compile(r'([0-9]+(?:\.[0-9]+)?)(?:[ \t]*km/?h)?', re.IGNORECASE)
+MAX_INDEXED_SPEED = 3.4028234663852886e38  # Elasticsearch float limit.
+
+
 def extract_speed_value(speed_data):
-    """Extract numeric speed value from various formats."""
-    if isinstance(speed_data, (int, float)):
-        return float(speed_data)
-    
+    """Read a nonnegative speed in km/h; return None when unavailable."""
     if isinstance(speed_data, str):
-        # Extract digits from speed string like "80kmh"
-        speed_match = re.search(r'(\d+)', speed_data)
-        if speed_match:
-            return float(speed_match.group(1))
-    
-    return 0.0
+        match = SPEED_TEXT.fullmatch(speed_data.strip())
+        if match is None:
+            return None
+        speed_data = match.group(1)
+    elif type(speed_data) not in (int, float):
+        return None
+    try:
+        value = float(speed_data)
+    except OverflowError:
+        return None
+    return value if 0 <= value <= MAX_INDEXED_SPEED else None
+
 
 # API URLs
 BUSES_API_URL = "https://portal.spatial.nsw.gov.au/geoserver/liveTransport/buses/FeatureServer/0"
@@ -228,7 +235,7 @@ def transform_bus_data(data):
                     "latitude": float(lat),
                     "longitude": float(lon),
                     "bearing": props.get('vehicle.position.bearing', 0),
-                    "speed": extract_speed_value(props.get('vehicle.position.speed', 0)),
+                    "speed": extract_speed_value(props.get('vehicle.position.speed')),
                     "compass": props.get('vehicle.position.compass', ''),
                     "timestamp_low": props.get('vehicle.timestamp.low', 0),
                     "timestamp_high": props.get('vehicle.timestamp.high', 0),

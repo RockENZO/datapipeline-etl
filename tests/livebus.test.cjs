@@ -25,6 +25,12 @@ assert.deepEqual([buses[2].lat, buses[2].lon], [-33.9, 151.3]);
 assert.deepEqual(L.parseBuses(null), []);
 assert.deepEqual(L.parseBuses({ features: [null, 7, { attributes: attrs('ok', 1, 2) }] }).map(b => b.id), ['ok']);   // bad entries skipped one by one
 
+const speedCases = require('./fixtures/livebus_speed.json');
+for (const [raw, expected] of [...speedCases, [NaN, null], [Infinity, null]]) {
+    const features = [{ attributes: attrs('speed', 1, 2, { 'vehicle.position.speed': raw }) }];
+    assert.equal(L.parseBuses({ features })[0].speed, expected);
+}
+
 (async () => {
     const calls = [];
     const ok = async url => { calls.push(url); return calls.length === 1 ? { ok: false, status: 500 } : { ok: true, json: async () => feed }; };
