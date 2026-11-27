@@ -1,4 +1,6 @@
 """Refresh ordering must preserve the previous map on failed ingestion."""
+import json
+from pathlib import Path
 import unittest
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
@@ -39,6 +41,23 @@ class BusRefreshTests(unittest.TestCase):
             buses.index_bus_data()
         bulk.assert_not_called()
         client.delete_by_query.assert_not_called()
+
+class BusSpeedTests(unittest.TestCase):
+    def test_speed_contract_for_indexed_vehicles(self):
+        fixture = Path(__file__).with_name("fixtures") / "livebus_speed.json"
+        cases = json.loads(fixture.read_text())
+        cases += [[float("nan"), None], [float("inf"), None]]
+        for raw, expected in cases:
+            with self.subTest(raw=raw):
+                properties = {
+                    "id": "test-bus",
+                    "vehicle.position.latitude": -33.8,
+                    "vehicle.position.longitude": 151.1,
+                    "vehicle.position.speed": raw,
+                }
+                action, = buses.transform_bus_data({"features": [{"properties": properties}]})
+                self.assertEqual(action["_source"]["properties"]["speed"], expected)
+
 
 class BusCoordinateTests(unittest.TestCase):
     def feature(self, lat=0, lon=0, identity='bus'):

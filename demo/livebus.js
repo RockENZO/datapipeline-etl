@@ -10,7 +10,14 @@
         API + '/query?f=geojson&where=1=1&outFields=*&outSR=4326&resultRecordCount=1000',
     ];
 
-    const speedValue = s => typeof s === 'number' ? s : typeof s === 'string' && /\d+/.test(s) ? Number(s.match(/\d+/)[0]) : 0;
+    // Keep the same numeric range as the Elasticsearch float field.
+    function speedValue(raw) {
+        if (typeof raw === 'string') {
+            const match = /^([0-9]+(?:\.[0-9]+)?)(?:[ \t]*km\/?h)?$/i.exec(raw.trim());
+            raw = match ? Number(match[1]) : null;
+        }
+        return typeof raw === 'number' && raw >= 0 && raw <= 3.4028234663852886e38 ? raw : null;
+    }
 
     // Stable upstream id only (numeric zero counts); finite WGS84 coordinates only. Anything else is skipped.
     function parseBuses(data) {
